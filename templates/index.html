@@ -6,9 +6,8 @@
   <title>Anime Streaming - Home</title>
   <!-- Load Tailwind CSS via the Play CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Additional CSS for the smooth bottom fade effect -->
+  <!-- Additional CSS for the smooth fade effect at the header's bottom edge -->
   <style>
-    /* Ensure header is fixed and its pseudo-element is positioned relative to it */
     header {
       position: fixed;
       top: 0;
@@ -16,23 +15,22 @@
       right: 0;
       z-index: 10;
     }
-    /* Create a fade effect that extends 40px below the header */
     header::after {
       content: "";
       position: absolute;
-      bottom: -40px; /* Extends below the header */
+      bottom: -40px; /* Extend 40px below header */
       left: 0;
       width: 100%;
-      height: 40px; /* Height of the fade effect */
+      height: 40px; /* Height of fade effect */
       background: linear-gradient(to bottom, rgba(45,43,68,0.5), transparent);
-      pointer-events: none; /* Allow clicks to pass through */
+      pointer-events: none;
     }
   </style>
-  <!-- JavaScript for smooth header background fade on scroll -->
+  <!-- JavaScript for dynamic header background opacity on scroll -->
   <script>
     window.addEventListener('scroll', function() {
       const header = document.querySelector('header');
-      // Calculate opacity: at the top (scrollY=0) opacity is 0.5; at scrollY >=200, opacity reaches 1.
+      // Calculate opacity: at scrollY = 0, opacity is 0.5; at scrollY >= 200, opacity reaches 1.
       let opacity = Math.min(window.scrollY / 200, 1) * 0.5 + 0.5;
       header.style.backgroundColor = `rgba(45,43,68,${opacity})`;
     });
@@ -40,19 +38,23 @@
 </head>
 <body class="bg-gradient-to-b from-[#1a1a2e] to-[#0d0d1d] min-h-screen">
   <!-- Fixed Header with smooth fade effect -->
-  <header class="py-8 px-12 transition-colors duration-300"
-          style="background-color: rgba(45,43,68,0.5);">
+  <header class="py-8 px-12 transition-colors duration-300" style="background-color: rgba(45,43,68,0.5);">
     <div class="flex items-center justify-between w-full">
       
-      <!-- Left Column: Login Button -->
-      <div>
+      <!-- Left Column: Login and Sign-Up Buttons -->
+      <div class="flex items-center space-x-4">
+        <!-- Login Button -->
         <button class="flex items-center space-x-3 bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
-          <!-- Ping Icon -->
+          <!-- Ping Icon for Login -->
           <div class="relative">
             <div class="absolute inline-flex h-4 w-4 rounded-full bg-red-500 opacity-75 animate-ping"></div>
             <div class="relative inline-flex rounded-full h-4 w-4 bg-red-500"></div>
           </div>
           <span>تسجيل دخول</span>
+        </button>
+        <!-- Sign-Up Button -->
+        <button class="flex items-center bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
+          <span>تسجيل</span>
         </button>
       </div>
       
@@ -66,7 +68,7 @@
             dir="rtl" 
             class="w-96 h-14 pl-4 pr-16 border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300 text-lg font-bold text-right rounded-none" 
           />
-          <!-- Bold, black search icon inside the search bar -->
+          <!-- Bold Black Search Icon inside the search bar -->
           <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
             <svg class="w-7 h-7 text-black" fill="none" stroke="black" stroke-width="3" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -77,7 +79,7 @@
         <div>
           <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="h-20" onerror="this.onerror=null;this.src='https://via.placeholder.com/120x60?text=Logo';">
         </div>
-        <!-- Menu Button in its own container, vertically centered -->
+        <!-- Menu Button (ensured to be vertically centered) -->
         <div class="h-20 flex items-center">
           <button class="text-white focus:outline-none">
             <svg class="w-14 h-14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
