@@ -2,13 +2,14 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required
 from forms import LoginForm
-from models import User
+from models import User, Anime
 
 bp = Blueprint('main', __name__)
 
 @bp.route('/')
 def index():
-    return render_template('index.html')
+    anime = Anime.query.first()
+    return render_template('index.html', new_anime=anime)
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():

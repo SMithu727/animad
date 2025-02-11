@@ -40,7 +40,6 @@
   <!-- Fixed Header with smooth fade effect -->
   <header class="py-8 px-12 transition-colors duration-300" style="background-color: rgba(45,43,68,0.5);">
     <div class="flex items-center justify-between w-full">
-      
       <!-- Left Column: Login and Sign-Up Buttons -->
       <div class="flex items-center space-x-4">
         <!-- Login Button -->
@@ -88,42 +87,77 @@
           </button>
         </div>
       </div>
-      
     </div>
   </header>
 
-  <!-- Spacer so content isn't hidden behind the fixed header -->
-  <div class="pt-32">
-    <!-- Main Content Area with Dummy Content for Scrolling -->
-    <main class="flex flex-col items-center justify-center space-y-8 px-4">
-      <h1 class="text-4xl text-white font-bold">Welcome to Anime Streaming!</h1>
-      <div class="w-full max-w-4xl mx-auto space-y-4 text-white">
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ornare tortor at leo accumsan, non fermentum sem consectetur.
-        </p>
-        <p>
-          Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam.
-        </p>
-        <p>
-          At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores.
-        </p>
-        <p>
-          Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio.
-        </p>
-        <p>
-          Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae.
-        </p>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-        </p>
-        <p>
-          Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.
-        </p>
-        <p>
-          At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti.
-        </p>
+  <!-- Spotlight Section: Fullscreen starting from the top -->
+  <section class="relative h-screen w-full">
+    <!-- Full Background Image -->
+    <img 
+      src="{{ new_anime.portrait_image }}" 
+      alt="{{ new_anime.title }}"
+      class="absolute inset-0 w-full h-full object-cover"
+    >
+    <!-- Gradient Overlay -->
+    <div class="absolute inset-0 bg-gradient-to-l from-purple-900 to-transparent"></div>
+    <!-- Anime Info Content -->
+    <div class="absolute right-24 top-1/2 -translate-y-1/2 text-white w-[500px]" dir="rtl">
+      <!-- Title -->
+      <h1 class="text-5xl font-bold mb-6">{{ new_anime.japanese_title }}</h1>
+      
+      <!-- Metadata -->
+      <div class="flex gap-4 mb-6">
+        <span class="bg-purple-500 px-4 py-2 rounded">{{ new_anime.mal_score }} MAL</span>
+        <span class="bg-gray-600 px-4 py-2 rounded">{{ new_anime.rating }}</span>
+        <span class="bg-gray-600 px-4 py-2 rounded">{{ new_anime.type }}</span>
       </div>
-    </main>
-  </div>
+
+      <!-- Description -->
+      <p class="text-lg mb-8 leading-relaxed">{{ new_anime.description }}</p>
+
+      <!-- Watch Button -->
+      <button class="bg-purple-600 hover:bg-purple-700 text-white px-12 py-4 rounded-lg text-xl font-bold transition-all">
+        شاهد الآن
+      </button>
+
+      <!-- Additional Info -->
+      <div class="mt-8 space-y-2">
+        <p><span class="font-bold">الموسم:</span> {{ new_anime.premiered }}</p>
+        <p><span class="font-bold">الحالة:</span> {{ new_anime.status }}</p>
+        <p><span class="font-bold">الأستوديو:</span> {{ new_anime.studios }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rest of your existing content -->
+  <main class="flex flex-col items-center justify-center space-y-8 px-4 mt-12">
+    <h1 class="text-4xl text-white font-bold">Welcome to Anime Streaming!</h1>
+    <div class="w-full max-w-4xl mx-auto space-y-4 text-white">
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ornare tortor at leo accumsan, non fermentum sem consectetur.
+      </p>
+      <p>
+        Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam.
+      </p>
+      <p>
+        At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores.
+      </p>
+      <p>
+        Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio.
+      </p>
+      <p>
+        Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae.
+      </p>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+      </p>
+      <p>
+        Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.
+      </p>
+      <p>
+        At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti.
+      </p>
+    </div>
+  </main>
 </body>
 </html>
