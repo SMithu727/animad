@@ -1,0 +1,108 @@
+<!-- templates/header.html -->
+<header class="py-8 px-12 transition-colors duration-300" style="background-color: rgba(45,43,68,0.5);">
+    <div class="flex items-center justify-between w-full">
+      <!-- Left Column: Login and Sign-Up Buttons -->
+      <div class="flex items-center space-x-4">
+        <a href="{{ url_for('main.login') }}" class="flex items-center space-x-3 bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
+          <div class="relative">
+            <div class="absolute inline-flex h-4 w-4 rounded-full bg-red-500 opacity-75 animate-ping"></div>
+            <div class="relative inline-flex rounded-full h-4 w-4 bg-red-500"></div>
+          </div>
+          <span>تسجيل دخول</span>
+        </a>
+        <a href="{{ url_for('main.signup') }}" class="flex items-center bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
+          <span>تسجيل</span>
+        </a>
+      </div>
+      <!-- Right Column: Search Bar, Logo, and Menu Button -->
+      <div class="flex items-center space-x-6">
+        <div class="relative">
+          <input 
+            type="text" 
+            placeholder="بحث" 
+            dir="rtl" 
+            class="w-96 h-14 pl-4 pr-16 border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300 text-lg font-bold text-right rounded-none" 
+          />
+          <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+            <svg class="w-7 h-7 text-black" fill="none" stroke="black" stroke-width="3" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+        </div>
+        <div>
+          <a href="{{ url_for('main.index') }}">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="h-20" onerror="this.onerror=null;this.src='https://via.placeholder.com/120x60?text=Logo';">
+          </a>
+        </div>
+        <div class="h-20 flex items-center" style="perspective: 1000px;">
+          <!-- Menu Button with flip animation -->
+          <button id="menu-button" class="text-white focus:outline-none transform transition-transform duration-300" style="transform-style: preserve-3d;">
+            <svg class="w-14 h-14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+              <path class="menu-icon" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Menu Panel: Overlays the page, aligned to the right, starting just under the header (144px) -->
+  <div id="menu-panel" class="fixed top-[144px] right-0 w-80 h-[calc(100%-144px)] bg-gradient-to-b from-[#1a1a2e] to-[#0d0d1d] bg-opacity-95 backdrop-blur-lg shadow-2xl transform translate-x-full transition-transform duration-300 z-20" dir="rtl">
+    <div class="p-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-bold mb-4 text-white">القائمة</h2>
+        <button id="close-menu" class="text-white focus:outline-none">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <ul class="space-y-4 text-white text-right">
+        <li class="py-2 border-b border-gray-700">عن الموقع</li>
+        <li class="py-2 border-b border-gray-700">الأخبار</li>
+        <li class="py-2 border-b border-gray-700">التصنيفات</li>
+        <li class="py-2">اتصل بنا</li>
+      </ul>
+    </div>
+  </div>
+  
+  <!-- Scripts -->
+  <script>
+    // Select elements
+    const menuButton = document.getElementById('menu-button');
+    const closeMenuButton = document.getElementById('close-menu');
+    const menuPanel = document.getElementById('menu-panel');
+  
+    // Toggle menu open/close with flip animation on the button
+    menuButton.addEventListener('click', function() {
+      menuPanel.classList.toggle('translate-x-full');
+      menuButton.classList.toggle('rotate-y-180');
+    });
+  
+    // Close menu on close button click
+    closeMenuButton.addEventListener('click', function() {
+      menuPanel.classList.add('translate-x-full');
+      menuButton.classList.remove('rotate-y-180');
+    });
+  
+    // Dynamic header scroll effect
+    window.addEventListener('scroll', function() {
+      const header = document.querySelector('header');
+      const scrollY = window.scrollY;
+      if (scrollY > 50) {
+        header.style.backgroundColor = "rgba(45,43,68,0.2)";
+        header.style.backdropFilter = "blur(10px)";
+      } else {
+        header.style.backgroundColor = "rgba(45,43,68,0.5)";
+        header.style.backdropFilter = "none";
+      }
+    });
+  </script>
+  
+  <!-- Additional CSS for flip animation on the menu button -->
+  <style>
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+  </style>
+  

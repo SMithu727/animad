@@ -1,125 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Anime Streaming - Home</title>
-  <!-- Load Tailwind CSS via the Play CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Additional CSS -->
-  <style>
-    /* Header styling */
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 10;
-      transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
-    }
-    header::after {
-      content: "";
-      position: absolute;
-      bottom: -40px;
-      left: 0;
-      width: 100%;
-      height: 40px;
-      background: linear-gradient(to bottom, rgba(45,43,68,0.5), transparent);
-      pointer-events: none;
-    }
-    /* Hide scrollbar */
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-    /* Custom fade in animation for cards */
-    @keyframes fadeIn {
-      0% {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    .fade-in {
-      animation: fadeIn 0.6s ease-in-out forwards;
-    }
-    /* Bounce animation for scroll buttons */
-    .hover-bounce:hover {
-      animation: bounce 0.5s;
-    }
-    @keyframes bounce {
-      0%, 100% { transform: translateY(-50%); }
-      50% { transform: translateY(calc(-50% - 5px)); }
-    }
-  </style>
-  <!-- JavaScript for dynamic header style on scroll -->
-  <script>
-    window.addEventListener('scroll', function() {
-      const header = document.querySelector('header');
-      const scrollY = window.scrollY;
-      if (scrollY > 50) {
-        header.style.backgroundColor = "rgba(45,43,68,0.2)";
-        header.style.backdropFilter = "blur(10px)";
-      } else {
-        header.style.backgroundColor = "rgba(45,43,68,0.5)";
-        header.style.backdropFilter = "none";
-      }
-    });
-  </script>
-</head>
-<body class="bg-gradient-to-b from-[#1a1a2e] to-[#0d0d1d] min-h-screen">
-  <!-- Fixed Header with dynamic blur & transparency -->
-  <header class="py-8 px-12 transition-colors duration-300" style="background-color: rgba(45,43,68,0.5);">
-    <div class="flex items-center justify-between w-full">
-      <!-- Left Column: Login and Sign-Up Buttons -->
-      <div class="flex items-center space-x-4">
-        <a href="{{ url_for('main.login') }}" class="flex items-center space-x-3 bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
-          <div class="relative">
-            <div class="absolute inline-flex h-4 w-4 rounded-full bg-red-500 opacity-75 animate-ping"></div>
-            <div class="relative inline-flex rounded-full h-4 w-4 bg-red-500"></div>
-          </div>
-          <span>تسجيل دخول</span>
-        </a>
-        <a href="{{ url_for('main.signup') }}" class="flex items-center bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
-          <span>تسجيل</span>
-        </a>
-      </div>
-      <!-- Right Column: Search Bar, Logo, and Menu Button -->
-      <div class="flex items-center space-x-6">
-        <div class="relative">
-          <input 
-            type="text" 
-            placeholder="بحث" 
-            dir="rtl" 
-            class="w-96 h-14 pl-4 pr-16 border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300 text-lg font-bold text-right rounded-none" 
-          />
-          <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-            <svg class="w-7 h-7 text-black" fill="none" stroke="black" stroke-width="3" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-          </div>
-        </div>
-        <div>
-          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="h-20" onerror="this.onerror=null;this.src='https://via.placeholder.com/120x60?text=Logo';">
-        </div>
-        <div class="h-20 flex items-center">
-          <button class="text-white focus:outline-none">
-            <svg class="w-14 h-14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
-  </header>
+{% extends 'base.html' %}
 
-  <!-- Spotlight Section: Fullscreen starting from the top with bottom fade -->
+{% block title %}Anime Streaming - Home{% endblock %}
+
+{# Override the main_class block to remove top padding on the index page #}
+{% block main_class %}pt-0{% endblock %}
+
+{% block content %}
+  <!-- Spotlight Section: Starts at the very top -->
   <section class="relative h-screen w-full">
     <img 
       src="{{ new_anime.portrait_image }}" 
@@ -166,13 +53,12 @@
   <section class="px-8 py-8" dir="rtl">
     <h2 class="text-4xl font-bold text-purple-900 mb-6 text-right">الرائجة</h2>
     <div class="relative">
-      <!-- Scrollable trending container with extra horizontal padding, hidden scrollbar, and smooth scroll -->
+      <!-- Scrollable trending container with hidden scrollbar -->
       <div id="trending-container" class="flex gap-8 overflow-x-auto pb-4 px-8 no-scrollbar scroll-smooth">
-        <!-- (8 Cards are repeated here with fade-in and hover scale effects) -->
-        <!-- Card 1 -->
-        <div class="w-[400px] relative group flex-shrink-0 transform transition duration-300 hover:scale-105 fade-in">
+        {% for i in range(1, 9) %}
+        <div class="w-[400px] relative group flex-shrink-0 transform transition duration-300 hover:scale-105 fade-in" style="animation-delay: {{ (i-1)*0.1 }}s;">
           <img src="{{ new_anime.portrait_image }}" alt="{{ new_anime.title }}" class="w-full h-[600px] object-cover rounded-lg">
-          <div class="absolute top-2 left-2 bg-purple-900 text-white font-bold rounded-full w-10 h-10 flex items-center justify-center">1</div>
+          <div class="absolute top-2 left-2 bg-purple-900 text-white font-bold rounded-full w-10 h-10 flex items-center justify-center">{{ i }}</div>
           <div class="mt-2 text-center font-bold text-white">{{ new_anime.title }}</div>
           <div class="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
             <div class="text-2xl font-bold">{{ new_anime.title }}</div>
@@ -181,92 +67,9 @@
             <div class="mt-1 text-lg">النوع: {{ new_anime.type }}</div>
           </div>
         </div>
-        <!-- Card 2 -->
-        <div class="w-[400px] relative group flex-shrink-0 transform transition duration-300 hover:scale-105 fade-in" style="animation-delay: 0.1s;">
-          <img src="{{ new_anime.portrait_image }}" alt="{{ new_anime.title }}" class="w-full h-[600px] object-cover rounded-lg">
-          <div class="absolute top-2 left-2 bg-purple-900 text-white font-bold rounded-full w-10 h-10 flex items-center justify-center">2</div>
-          <div class="mt-2 text-center font-bold text-white">{{ new_anime.title }}</div>
-          <div class="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
-            <div class="text-2xl font-bold">{{ new_anime.title }}</div>
-            <div class="mt-1 text-lg">التقييم: {{ new_anime.rating }}</div>
-            <div class="mt-1 text-lg">MAL: {{ new_anime.mal_score }}</div>
-            <div class="mt-1 text-lg">النوع: {{ new_anime.type }}</div>
-          </div>
-        </div>
-        <!-- Card 3 -->
-        <div class="w-[400px] relative group flex-shrink-0 transform transition duration-300 hover:scale-105 fade-in" style="animation-delay: 0.2s;">
-          <img src="{{ new_anime.portrait_image }}" alt="{{ new_anime.title }}" class="w-full h-[600px] object-cover rounded-lg">
-          <div class="absolute top-2 left-2 bg-purple-900 text-white font-bold rounded-full w-10 h-10 flex items-center justify-center">3</div>
-          <div class="mt-2 text-center font-bold text-white">{{ new_anime.title }}</div>
-          <div class="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
-            <div class="text-2xl font-bold">{{ new_anime.title }}</div>
-            <div class="mt-1 text-lg">التقييم: {{ new_anime.rating }}</div>
-            <div class="mt-1 text-lg">MAL: {{ new_anime.mal_score }}</div>
-            <div class="mt-1 text-lg">النوع: {{ new_anime.type }}</div>
-          </div>
-        </div>
-        <!-- Card 4 -->
-        <div class="w-[400px] relative group flex-shrink-0 transform transition duration-300 hover:scale-105 fade-in" style="animation-delay: 0.3s;">
-          <img src="{{ new_anime.portrait_image }}" alt="{{ new_anime.title }}" class="w-full h-[600px] object-cover rounded-lg">
-          <div class="absolute top-2 left-2 bg-purple-900 text-white font-bold rounded-full w-10 h-10 flex items-center justify-center">4</div>
-          <div class="mt-2 text-center font-bold text-white">{{ new_anime.title }}</div>
-          <div class="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
-            <div class="text-2xl font-bold">{{ new_anime.title }}</div>
-            <div class="mt-1 text-lg">التقييم: {{ new_anime.rating }}</div>
-            <div class="mt-1 text-lg">MAL: {{ new_anime.mal_score }}</div>
-            <div class="mt-1 text-lg">النوع: {{ new_anime.type }}</div>
-          </div>
-        </div>
-        <!-- Card 5 -->
-        <div class="w-[400px] relative group flex-shrink-0 transform transition duration-300 hover:scale-105 fade-in" style="animation-delay: 0.4s;">
-          <img src="{{ new_anime.portrait_image }}" alt="{{ new_anime.title }}" class="w-full h-[600px] object-cover rounded-lg">
-          <div class="absolute top-2 left-2 bg-purple-900 text-white font-bold rounded-full w-10 h-10 flex items-center justify-center">5</div>
-          <div class="mt-2 text-center font-bold text-white">{{ new_anime.title }}</div>
-          <div class="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
-            <div class="text-2xl font-bold">{{ new_anime.title }}</div>
-            <div class="mt-1 text-lg">التقييم: {{ new_anime.rating }}</div>
-            <div class="mt-1 text-lg">MAL: {{ new_anime.mal_score }}</div>
-            <div class="mt-1 text-lg">النوع: {{ new_anime.type }}</div>
-          </div>
-        </div>
-        <!-- Card 6 -->
-        <div class="w-[400px] relative group flex-shrink-0 transform transition duration-300 hover:scale-105 fade-in" style="animation-delay: 0.5s;">
-          <img src="{{ new_anime.portrait_image }}" alt="{{ new_anime.title }}" class="w-full h-[600px] object-cover rounded-lg">
-          <div class="absolute top-2 left-2 bg-purple-900 text-white font-bold rounded-full w-10 h-10 flex items-center justify-center">6</div>
-          <div class="mt-2 text-center font-bold text-white">{{ new_anime.title }}</div>
-          <div class="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
-            <div class="text-2xl font-bold">{{ new_anime.title }}</div>
-            <div class="mt-1 text-lg">التقييم: {{ new_anime.rating }}</div>
-            <div class="mt-1 text-lg">MAL: {{ new_anime.mal_score }}</div>
-            <div class="mt-1 text-lg">النوع: {{ new_anime.type }}</div>
-          </div>
-        </div>
-        <!-- Card 7 -->
-        <div class="w-[400px] relative group flex-shrink-0 transform transition duration-300 hover:scale-105 fade-in" style="animation-delay: 0.6s;">
-          <img src="{{ new_anime.portrait_image }}" alt="{{ new_anime.title }}" class="w-full h-[600px] object-cover rounded-lg">
-          <div class="absolute top-2 left-2 bg-purple-900 text-white font-bold rounded-full w-10 h-10 flex items-center justify-center">7</div>
-          <div class="mt-2 text-center font-bold text-white">{{ new_anime.title }}</div>
-          <div class="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
-            <div class="text-2xl font-bold">{{ new_anime.title }}</div>
-            <div class="mt-1 text-lg">التقييم: {{ new_anime.rating }}</div>
-            <div class="mt-1 text-lg">MAL: {{ new_anime.mal_score }}</div>
-            <div class="mt-1 text-lg">النوع: {{ new_anime.type }}</div>
-          </div>
-        </div>
-        <!-- Card 8 -->
-        <div class="w-[400px] relative group flex-shrink-0 transform transition duration-300 hover:scale-105 fade-in" style="animation-delay: 0.7s;">
-          <img src="{{ new_anime.portrait_image }}" alt="{{ new_anime.title }}" class="w-full h-[600px] object-cover rounded-lg">
-          <div class="absolute top-2 left-2 bg-purple-900 text-white font-bold rounded-full w-10 h-10 flex items-center justify-center">8</div>
-          <div class="mt-2 text-center font-bold text-white">{{ new_anime.title }}</div>
-          <div class="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
-            <div class="text-2xl font-bold">{{ new_anime.title }}</div>
-            <div class="mt-1 text-lg">التقييم: {{ new_anime.rating }}</div>
-            <div class="mt-1 text-lg">MAL: {{ new_anime.mal_score }}</div>
-            <div class="mt-1 text-lg">النوع: {{ new_anime.type }}</div>
-          </div>
-        </div>
+        {% endfor %}
       </div>
-      <!-- Left and Right scroll buttons for trending section -->
+      <!-- Left and Right scroll buttons -->
       <button id="scroll-left" class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white w-14 h-14 rounded-full flex items-center justify-center opacity-70 hover:opacity-100 hover-bounce">
         <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
@@ -285,7 +88,6 @@
     <div class="flex flex-row gap-8">
       <!-- Sidebar: Genre and Top Anime Menus -->
       <aside class="w-1/4 space-y-8">
-        <!-- Genre Menu -->
         <div class="bg-gray-800 p-4 rounded-lg shadow-md">
           <h3 class="text-xl font-bold text-white mb-4">التصنيفات</h3>
           <div class="grid grid-cols-3 gap-2">
@@ -300,7 +102,6 @@
             <a href="#" class="bg-purple-600 text-white text-center py-2 rounded">مغامرات</a>
           </div>
         </div>
-        <!-- Top Anime Menu -->
         <div class="bg-gray-800 p-4 rounded-lg shadow-md">
           <h3 class="text-xl font-bold text-white mb-4">أفضل الأنميات</h3>
           <div class="space-y-4">
@@ -317,7 +118,6 @@
       <div class="w-3/4">
         <h2 class="text-4xl font-bold text-purple-900 mb-6 text-right">آخر الحلقات</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          <!-- Episode Card 1 -->
           <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">
             <img src="{{ new_anime.portrait_image }}" alt="{{ new_anime.title }}" class="w-full h-48 object-cover">
             <div class="p-4">
@@ -325,7 +125,6 @@
               <p class="text-sm text-gray-300">الحلقة 1</p>
             </div>
           </div>
-          <!-- Episode Card 2 -->
           <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">
             <img src="{{ new_anime.portrait_image }}" alt="{{ new_anime.title }}" class="w-full h-48 object-cover">
             <div class="p-4">
@@ -333,7 +132,6 @@
               <p class="text-sm text-gray-300">الحلقة 2</p>
             </div>
           </div>
-          <!-- Episode Card 3 -->
           <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">
             <img src="{{ new_anime.portrait_image }}" alt="{{ new_anime.title }}" class="w-full h-48 object-cover">
             <div class="p-4">
@@ -341,7 +139,6 @@
               <p class="text-sm text-gray-300">الحلقة 3</p>
             </div>
           </div>
-          <!-- Episode Card 4 -->
           <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">
             <img src="{{ new_anime.portrait_image }}" alt="{{ new_anime.title }}" class="w-full h-48 object-cover">
             <div class="p-4">
@@ -349,74 +146,46 @@
               <p class="text-sm text-gray-300">الحلقة 4</p>
             </div>
           </div>
-          <!-- Episode Card 5 -->
-          <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">
-            <img src="{{ new_anime.portrait_image }}" alt="{{ new_anime.title }}" class="w-full h-48 object-cover">
-            <div class="p-4">
-              <h3 class="text-xl font-bold text-white">{{ new_anime.title }}</h3>
-              <p class="text-sm text-gray-300">الحلقة 5</p>
-            </div>
-          </div>
-          <!-- Episode Card 6 -->
-          <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">
-            <img src="{{ new_anime.portrait_image }}" alt="{{ new_anime.title }}" class="w-full h-48 object-cover">
-            <div class="p-4">
-              <h3 class="text-xl font-bold text-white">{{ new_anime.title }}</h3>
-              <p class="text-sm text-gray-300">الحلقة 6</p>
-            </div>
-          </div>
-          <!-- Episode Card 7 -->
-          <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">
-            <img src="{{ new_anime.portrait_image }}" alt="{{ new_anime.title }}" class="w-full h-48 object-cover">
-            <div class="p-4">
-              <h3 class="text-xl font-bold text-white">{{ new_anime.title }}</h3>
-              <p class="text-sm text-gray-300">الحلقة 7</p>
-            </div>
-          </div>
-          <!-- Episode Card 8 -->
-          <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">
-            <img src="{{ new_anime.portrait_image }}" alt="{{ new_anime.title }}" class="w-full h-48 object-cover">
-            <div class="p-4">
-              <h3 class="text-xl font-bold text-white">{{ new_anime.title }}</h3>
-              <p class="text-sm text-gray-300">الحلقة 8</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Rest of your existing content -->
-  <main class="flex flex-col items-center justify-center space-y-8 px-4 mt-12">
-    <h1 class="text-4xl text-white font-bold">Welcome to Anime Streaming!</h1>
-    <div class="w-full max-w-4xl mx-auto space-y-4 text-white">
-      <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ornare tortor at leo accumsan, non fermentum sem consectetur.
-      </p>
-      <p>
-        Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam.
-      </p>
-      <p>
-        At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores.
-      </p>
-      <p>
-        Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio.
-      </p>
-      <p>
-        Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae.
-      </p>
-      <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-      </p>
-      <p>
-        Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.
-      </p>
-      <p>
-        At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti.
-      </p>
+  <!-- Additional Content Section -->
+  <section class="py-12">
+    <div class="flex flex-col items-center justify-center space-y-8 px-4">
+      <h1 class="text-4xl text-white font-bold">Welcome to Anime Streaming!</h1>
+      <div class="w-full max-w-4xl mx-auto space-y-4 text-white">
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ornare tortor at leo accumsan, non fermentum sem consectetur.
+        </p>
+        <p>
+          Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam.
+        </p>
+        <p>
+          At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores.
+        </p>
+        <p>
+          Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio.
+        </p>
+        <p>
+          Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae.
+        </p>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        </p>
+        <p>
+          Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.
+        </p>
+        <p>
+          At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti.
+        </p>
+      </div>
     </div>
-  </main>
+  </section>
+{% endblock %}
 
+{% block extra_scripts %}
   <!-- Script for scroll buttons in trending section -->
   <script>
     document.getElementById('scroll-left').addEventListener('click', function() {
@@ -426,7 +195,6 @@
       document.getElementById('trending-container').scrollBy({ left: 400, behavior: 'smooth' });
     });
   </script>
-
   <!-- Toggle description script for spotlight -->
   <script>
     document.addEventListener('DOMContentLoaded', function(){
@@ -447,5 +215,4 @@
       });
     });
   </script>
-</body>
-</html>
+{% endblock %}
