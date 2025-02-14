@@ -1,4 +1,3 @@
-# app_factory.py
 from flask import Flask
 from config import Config
 from extensions import db, migrate
@@ -22,12 +21,12 @@ def create_app():
     with app.app_context():
         from models import User, Anime
     
-    # Define user_loader here (critical for Flask-Login)
+    # Define user_loader for Flask-Login
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
     
-    # Import and register the blueprint from app.py
+    # Import and register the blueprint
     from app import bp
     app.register_blueprint(bp)
     
@@ -43,7 +42,7 @@ def create_app():
             special_episode_count=12,
             type="TV",
             duration="23m",
-            description="During their martial arts training expedition in China, Ranma Saotome and his father Genma suffered an accident, which in turn, afflicted them with a curse—whenever they are doused with cold water, Ranma transforms into a girl, while his father turns into a panda! Only hot water can reverse these changes, but any further contact with cold water opens the can of worms once more. Unfortunately, the trouble does not end there, as Ranma finds out about his betrothal to one of the daughters of Soun Tendou, his father's closest friend. During the families' first meeting, it is decided that Ranma is to be married to Akane, the youngest daughter, a decision that is met with vehement protests from both sides. The two are simply not compatible, yet they are forced to live under one roof. Ranma's status quo further adds to the chaos, leading him to a series of comedic situations and misunderstandings that, in the grand scheme of things, may just be what he needs to work with Akane. ",
+            description="During their martial arts training expedition in China, ...",
             japanese_title="らんま1/2",
             synonyms="Ranma 1/2, Ranma ½ Nettou Hen",
             aired="Oct 6, 2024 to Dec 22, 2024",
@@ -59,7 +58,5 @@ def create_app():
         db.session.add(test_anime)
         db.session.commit()
         print("Added test anime entry")
-    
-    return app
     
     return app

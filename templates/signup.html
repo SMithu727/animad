@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Anime Streaming - Login</title>
+  <title>Anime Streaming - Sign Up</title>
   <!-- Load Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -82,23 +82,31 @@
     </div>
   </header>
 
-  <!-- Login Form Section -->
+  <!-- Sign-Up Form Section -->
   <main class="flex items-center justify-center mt-40">
     <div class="bg-white p-10 rounded-lg shadow-lg w-full max-w-md">
-      <h2 class="text-3xl font-bold mb-6 text-center text-[#2d2b44]">تسجيل الدخول</h2>
-      <form method="POST" action="{{ url_for('main.login') }}">
+      <h2 class="text-3xl font-bold mb-6 text-center text-[#2d2b44]">تسجيل حساب جديد</h2>
+      <form method="POST" action="{{ url_for('main.signup') }}">
         {{ form.hidden_tag() }}
+        <div class="mb-4">
+          {{ form.username.label(class="block text-[#2d2b44] text-lg font-semibold mb-2") }}
+          {{ form.username(class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-300") }}
+        </div>
         <div class="mb-4">
           {{ form.email.label(class="block text-[#2d2b44] text-lg font-semibold mb-2") }}
           {{ form.email(class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-300") }}
         </div>
-        <div class="mb-6">
+        <div class="mb-4">
           {{ form.password.label(class="block text-[#2d2b44] text-lg font-semibold mb-2") }}
           {{ form.password(class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-300") }}
         </div>
+        <div class="mb-6">
+          {{ form.confirm_password.label(class="block text-[#2d2b44] text-lg font-semibold mb-2") }}
+          {{ form.confirm_password(class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-300") }}
+        </div>
         <div class="flex items-center justify-between">
           <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded focus:outline-none focus:shadow-outline">
-            تسجيل الدخول
+            تسجيل حساب
           </button>
         </div>
       </form>
