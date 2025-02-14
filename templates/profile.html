@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Anime Streaming - Profile{% endblock %}
+
+{% block main_class %}bg-gradient-to-b from-[#1a1a2e] to-[#0d0d1d] min-h-screen{% endblock %}
+
+{% block content %}
+  {% include 'header.html' %}
+  
+  <!-- Profile Update Form Section -->
+  <main class="flex items-center justify-center mt-40">
+    <div class="bg-white p-10 rounded-lg shadow-lg w-full max-w-md">
+      <h2 class="text-3xl font-bold mb-6 text-center text-[#2d2b44]">تحديث الملف الشخصي</h2>
+      
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="mb-4 p-3 rounded
+                        {% if category == 'success' %} bg-green-200 text-green-800
+                        {% elif category == 'danger' %} bg-red-200 text-red-800
+                        {% else %} bg-blue-200 text-blue-800 {% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      
+      <form method="POST" action="{{ url_for('main.profile') }}" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        
+        <!-- Username Field -->
+        <div class="mb-4">
+          {{ form.username.label(class="block text-[#2d2b44] text-lg font-semibold mb-2") }}
+          {{ form.username(class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-300") }}
+          {% for error in form.username.errors %}
+            <span class="text-red-500 text-sm">{{ error }}</span>
+          {% endfor %}
+        </div>
+        
+        <!-- Email Field -->
+        <div class="mb-4">
+          {{ form.email.label(class="block text-[#2d2b44] text-lg font-semibold mb-2") }}
+          {{ form.email(class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-300") }}
+          {% for error in form.email.errors %}
+            <span class="text-red-500 text-sm">{{ error }}</span>
+          {% endfor %}
+        </div>
+        
+        <!-- Password Field -->
+        <div class="mb-4">
+          {{ form.password.label(class="block text-[#2d2b44] text-lg font-semibold mb-2") }}
+          {{ form.password(class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-300") }}
+          {% for error in form.password.errors %}
+            <span class="text-red-500 text-sm">{{ error }}</span>
+          {% endfor %}
+        </div>
+        
+        <!-- Picture Field -->
+        <div class="mb-4">
+          {{ form.picture.label(class="block text-[#2d2b44] text-lg font-semibold mb-2") }}
+          {{ form.picture(class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-300") }}
+          {% for error in form.picture.errors %}
+            <span class="text-red-500 text-sm">{{ error }}</span>
+          {% endfor %}
+        </div>
+        
+        <div class="flex items-center justify-center">
+          <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded">
+            تحديث الملف
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+{% endblock %}

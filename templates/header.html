@@ -4,10 +4,21 @@
       <!-- Left Column: User Authentication Section -->
       <div class="flex items-center space-x-4">
         {% if current_user.is_authenticated %}
-          <!-- If the user is logged in, show their avatar (or a placeholder) and a sign-out button -->
+          <!-- User Avatar -->
           <a href="{{ url_for('main.profile') }}" class="flex items-center space-x-2">
-            <img src="{{ current_user.avatar if current_user.avatar else url_for('static', filename='images/avatar-placeholder.png') }}" alt="User Avatar" class="h-12 w-12 rounded-full object-cover">
+            <img 
+              src="{{ url_for('static', filename='uploads/' ~ current_user.profile_picture) if current_user.profile_picture else url_for('static', filename='images/avatar-placeholder.png') }}" 
+              alt="User Avatar" 
+              class="h-12 w-12 rounded-full object-cover"
+            >
           </a>
+          <!-- Button for Admins/Mods to Add Anime -->
+          {% if current_user.role in ['admin', 'mod'] %}
+            <a href="{{ url_for('main.add_anime') }}" class="bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
+              إضافة أنمي
+            </a>
+          {% endif %}
+          <!-- Logout Button -->
           <a href="{{ url_for('main.logout') }}" class="bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
             تسجيل خروج
           </a>
@@ -94,7 +105,7 @@
       menuButton.classList.remove('rotate-y-180');
     });
   
-    // Dynamic header scroll effect remains as before
+    // Dynamic header scroll effect
     window.addEventListener('scroll', function() {
       const header = document.querySelector('header');
       const scrollY = window.scrollY;

@@ -1,8 +1,9 @@
-# app.py
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
+import os
+from werkzeug.utils import secure_filename
 import requests
 from flask_login import login_user, logout_user, login_required, current_user
-from forms import LoginForm, SignupForm, AdminAnimeForm
+from forms import LoginForm, SignupForm, AdminAnimeForm, ProfileForm
 from models import User, Anime
 from extensions import db
 
@@ -59,13 +60,36 @@ def logout():
     flash("Logged out successfully.", "info")
     return redirect(url_for('main.index'))
 
-@bp.route('/profile')
+@bp.route('/profile', methods=['GET', 'POST'])
+@login_required
 def profile():
-    # Temporary placeholder: using index template
-    return render_template('index.html')
+    form = ProfileForm(obj=current_user)
+    if form.validate_on_submit():
+        # Update username and email
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        # Update password if provided (remember to hash in production)
+        if form.password.data:
+            current_user.password = form.password.data
+        # Handle file upload if a new picture is provided
+        if form.picture.data:
+            filename = secure_filename(form.picture.data.filename)
+            picture_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            form.picture.data.save(picture_path)
+            current_user.profile_picture = filename
+        db.session.commit()
+        flash("Profile updated successfully!", "success")
+        return redirect(url_for('main.profile'))
+    return render_template("profile.html", form=form)
 
-@bp.route('/admin', methods=['GET', 'POST'])
-def admin():
+@bp.route('/add_anime', methods=['GET', 'POST'])
+@login_required
+def add_anime():
+    # Only allow access if the user is an admin or a mod
+    if current_user.role not in ['admin', 'mod']:
+        flash("You do not have permission to access this page.", "danger")
+        return redirect(url_for('main.index'))
+    
     form = AdminAnimeForm()
     
     if request.method == 'POST':
@@ -145,7 +169,8 @@ def admin():
                 db.session.add(new_anime)
                 db.session.commit()
                 flash("Anime added successfully!", "success")
-                return redirect(url_for("main.admin"))
+                return redirect(url_for("main.add_anime"))
             else:
                 flash("Please fix the errors in the form.", "danger")
-    return render_template("admin.html", form=form)
+    return render_template("addanime.html", form=form)
+

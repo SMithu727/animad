@@ -2,6 +2,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, IntegerField, TextAreaField, FloatField
 from wtforms.validators import DataRequired, Email, EqualTo, Optional
+from flask_wtf.file import FileField, FileAllowed
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -17,6 +18,15 @@ class SignupForm(FlaskForm):
         EqualTo('password', message='Passwords must match')
     ])
     submit = SubmitField('Sign Up')
+
+class ProfileForm(FlaskForm):
+    username = StringField("Username", validators=[DataRequired()])
+    email = StringField("Email", validators=[DataRequired(), Email()])
+    # Password is optional—only update if provided
+    password = PasswordField("Password", validators=[Optional()])
+    # Allow only images
+    picture = FileField("Profile Picture", validators=[Optional(), FileAllowed(['jpg', 'png', 'jpeg'], "Images only!")])
+    submit = SubmitField("Update Profile")
 
 # forms.py
 from flask_wtf import FlaskForm

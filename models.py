@@ -8,6 +8,10 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     # NEVER store plaintext passwords in production!
     password = db.Column(db.String(128), nullable=False)
+    # New field for storing the filename (or path) of the uploaded profile picture
+    profile_picture = db.Column(db.String(256), nullable=True)
+    # New field for user roles: 'user', 'admin', or 'mod'
+    role = db.Column(db.String(20), nullable=False, default='user')
 
     def __repr__(self):
         return f'<User {self.username}>'

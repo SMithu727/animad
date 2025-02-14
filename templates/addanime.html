@@ -26,7 +26,7 @@
   {% endwith %}
   
   <h1 class="text-4xl text-white font-bold mb-8 text-center">Add New Anime</h1>
-  <form method="POST" action="{{ url_for('main.admin') }}" class="bg-white p-8 rounded-lg shadow-lg">
+  <form method="POST" action="{{ url_for('main.add_anime') }}" class="bg-white p-8 rounded-lg shadow-lg">
     {{ form.hidden_tag() }}
     
     <!-- MAL ID Field and Fetch Button -->
