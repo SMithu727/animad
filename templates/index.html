@@ -107,36 +107,40 @@
 
   <!-- Latest Episodes Section with Sidebar -->
   <section class="px-8 py-8" dir="rtl">
-    <div class="flex flex-row gap-8">
-      <aside class="w-1/4 space-y-8">
-        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
+    <div class="flex flex-col lg:flex-row gap-8">
+      <aside class="lg:w-1/4 space-y-8">
+        <!-- Updated Genres Menu -->
+        <div class="bg-gradient-to-r from-[#1a1a2e] to-[#0d0d1d] p-6 rounded-lg shadow-lg">
           <h3 class="text-xl font-bold text-white mb-4">التصنيفات</h3>
-          <div class="grid grid-cols-3 gap-2">
-            <a href="#" class="bg-purple-600 text-white text-center py-2 rounded">أكشن</a>
-            <a href="#" class="bg-purple-600 text-white text-center py-2 rounded">رومانسي</a>
-            <a href="#" class="bg-purple-600 text-white text-center py-2 rounded">كوميدي</a>
-            <a href="#" class="bg-purple-600 text-white text-center py-2 rounded">دراما</a>
-            <a href="#" class="bg-purple-600 text-white text-center py-2 rounded">رعب</a>
-            <a href="#" class="bg-purple-600 text-white text-center py-2 rounded">خيال علمي</a>
-            <a href="#" class="bg-purple-600 text-white text-center py-2 rounded">إيسيكاي</a>
-            <a href="#" class="bg-purple-600 text-white text-center py-2 rounded">مدرسي</a>
-            <a href="#" class="bg-purple-600 text-white text-center py-2 rounded">مغامرات</a>
+          <div class="grid grid-cols-3 gap-4">
+            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">أكشن</a>
+            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">رومانسي</a>
+            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">كوميدي</a>
+            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">دراما</a>
+            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">رعب</a>
+            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">خيال علمي</a>
+            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">إيسيكاي</a>
+            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">مدرسي</a>
+            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">مغامرات</a>
           </div>
         </div>
-        <div class="bg-gray-800 p-4 rounded-lg shadow-md">
-          <h3 class="text-xl font-bold text-white mb-4">أفضل الأنميات</h3>
-          <div class="space-y-4">
-            {% for anime in trending %}
-            <a href="#" class="flex items-center space-x-4 bg-gray-700 p-2 rounded hover:bg-gray-600">
-              <!-- Using poster image for Best Anime list -->
-              <img src="{{ anime.poster_image }}" alt="{{ anime.title }}" class="w-20 h-28 object-cover rounded">
-              <span class="text-white font-semibold">{{ anime.title }}</span>
-            </a>
-            {% endfor %}
-          </div>
-        </div>
+        <!-- Updated Top Anime Menu -->
+<div class="bg-gradient-to-r from-[#1a1a2e] to-[#0d0d1d] p-6 rounded-lg shadow-lg">
+  <h3 class="text-xl font-bold text-white mb-4">أفضل الأنميات</h3>
+  <div class="grid grid-cols-1 gap-6">
+    {% for anime in trending %}
+    <a href="#" class="block transform transition duration-300 hover:scale-105 hover:shadow-2xl">
+      <img src="{{ anime.poster_image }}" alt="{{ anime.title }}" class="w-full h-auto object-cover rounded-lg">
+      <div class="mt-2 text-center">
+        <h3 class="text-2xl font-bold text-white">{{ anime.title }}</h3>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
       </aside>
-      <div class="w-3/4">
+      <div class="lg:w-3/4">
         <h2 class="text-4xl font-bold text-purple-900 mb-6 text-right">آخر الحلقات</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">

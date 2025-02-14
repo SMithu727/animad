@@ -97,7 +97,7 @@ def add_anime():
         if "fetch" in request.form:
             if not form.mal_id.data:
                 flash("Please enter a MAL ID to fetch data.", "danger")
-                return render_template("admin.html", form=form)
+                return render_template("add_anime.html", form=form)
             mal_id = form.mal_id.data
             api_url = f"https://api.jikan.moe/v4/anime/{mal_id}"
             response = requests.get(api_url)
@@ -132,7 +132,7 @@ def add_anime():
                     flash("Data fetched successfully! You can edit the fields before submitting.", "success")
             else:
                 flash("Error fetching data from MAL API.", "danger")
-            return render_template("admin.html", form=form)
+            return render_template("add_anime.html", form=form)
         
         # If the "Add Anime" button was pressed:
         elif "submit" in request.form:
@@ -172,5 +172,6 @@ def add_anime():
                 return redirect(url_for("main.add_anime"))
             else:
                 flash("Please fix the errors in the form.", "danger")
-    return render_template("addanime.html", form=form)
+    return render_template("add_anime.html", form=form)
+
 

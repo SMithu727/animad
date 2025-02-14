@@ -27,16 +27,6 @@ class ProfileForm(FlaskForm):
     # Allow only images
     picture = FileField("Profile Picture", validators=[Optional(), FileAllowed(['jpg', 'png', 'jpeg'], "Images only!")])
     submit = SubmitField("Update Profile")
-
-# forms.py
-from flask_wtf import FlaskForm
-from wtforms import IntegerField, StringField, TextAreaField, FloatField, SubmitField
-from wtforms.validators import DataRequired, Optional
-
-from flask_wtf import FlaskForm
-from wtforms import IntegerField, StringField, TextAreaField, SubmitField
-from wtforms.validators import DataRequired, Optional
-
 class AdminAnimeForm(FlaskForm):
     mal_id = IntegerField("MAL ID", validators=[Optional()])
     
