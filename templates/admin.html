@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin - Add Anime{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-12">
+  <!-- Flash Messages Block -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="mb-6">
+        {% for category, message in messages %}
+          <div class="px-4 py-2 rounded mb-2
+                      {% if category == 'success' %}
+                        bg-green-500
+                      {% elif category == 'danger' %}
+                        bg-red-500
+                      {% else %}
+                        bg-blue-500
+                      {% endif %}
+                      text-white">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  
+  <h1 class="text-4xl text-white font-bold mb-8 text-center">Add New Anime</h1>
+  <form method="POST" action="{{ url_for('main.admin') }}" class="bg-white p-8 rounded-lg shadow-lg">
+    {{ form.hidden_tag() }}
+    
+    <!-- MAL ID Field and Fetch Button -->
+    <div class="mb-6">
+      <label class="block text-gray-800 font-semibold mb-2">MAL ID (Optional)</label>
+      <div class="flex">
+        {{ form.mal_id(class="w-full p-3 border border-gray-300 rounded-l") }}
+        {{ form.fetch(class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-r") }}
+      </div>
+      {% for error in form.mal_id.errors %}
+        <span class="text-red-500 text-sm">{{ error }}</span>
+      {% endfor %}
+    </div>
+    
+    <!-- Anime Details Fields -->
+    <div class="mb-4">
+      <label class="block text-gray-800 font-semibold mb-2">Title</label>
+      {{ form.title(class="w-full p-3 border border-gray-300 rounded") }}
+      {% for error in form.title.errors %}
+        <span class="text-red-500 text-sm">{{ error }}</span>
+      {% endfor %}
+    </div>
+    <div class="mb-4 grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-gray-800 font-semibold mb-2">Rating</label>
+        {{ form.rating(class="w-full p-3 border border-gray-300 rounded") }}
+      </div>
+      <div>
+        <label class="block text-gray-800 font-semibold mb-2">Quality</label>
+        {{ form.quality(class="w-full p-3 border border-gray-300 rounded") }}
+      </div>
+    </div>
+    <div class="mb-4">
+      <label class="block text-gray-800 font-semibold mb-2">Episode Count</label>
+      {{ form.episode_count(class="w-full p-3 border border-gray-300 rounded") }}
+    </div>
+    <div class="mb-4">
+      <label class="block text-gray-800 font-semibold mb-2">Type</label>
+      {{ form.anime_type(class="w-full p-3 border border-gray-300 rounded") }}
+    </div>
+    <div class="mb-4">
+      <label class="block text-gray-800 font-semibold mb-2">Duration</label>
+      {{ form.duration(class="w-full p-3 border border-gray-300 rounded") }}
+    </div>
+    <div class="mb-4">
+      <label class="block text-gray-800 font-semibold mb-2">Description</label>
+      {{ form.description(class="w-full p-3 border border-gray-300 rounded", rows="5") }}
+    </div>
+    <div class="mb-4 grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-gray-800 font-semibold mb-2">Japanese Title</label>
+        {{ form.japanese_title(class="w-full p-3 border border-gray-300 rounded") }}
+      </div>
+      <div>
+        <label class="block text-gray-800 font-semibold mb-2">Synonyms</label>
+        {{ form.synonyms(class="w-full p-3 border border-gray-300 rounded") }}
+      </div>
+    </div>
+    <div class="mb-4 grid grid-cols-3 gap-4">
+      <div>
+        <label class="block text-gray-800 font-semibold mb-2">Aired</label>
+        {{ form.aired(class="w-full p-3 border border-gray-300 rounded") }}
+      </div>
+      <div>
+        <label class="block text-gray-800 font-semibold mb-2">Premiered</label>
+        {{ form.premiered(class="w-full p-3 border border-gray-300 rounded") }}
+      </div>
+      <div>
+        <label class="block text-gray-800 font-semibold mb-2">Status</label>
+        {{ form.status(class="w-full p-3 border border-gray-300 rounded") }}
+      </div>
+    </div>
+    <div class="mb-4 grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-gray-800 font-semibold mb-2">MAL Score</label>
+        {{ form.mal_score(class="w-full p-3 border border-gray-300 rounded") }}
+      </div>
+      <div>
+        <label class="block text-gray-800 font-semibold mb-2">Genres</label>
+        {{ form.genres(class="w-full p-3 border border-gray-300 rounded") }}
+      </div>
+    </div>
+    <div class="mb-4 grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-gray-800 font-semibold mb-2">Studios</label>
+        {{ form.studios(class="w-full p-3 border border-gray-300 rounded") }}
+      </div>
+      <div>
+        <label class="block text-gray-800 font-semibold mb-2">Producers</label>
+        {{ form.producers(class="w-full p-3 border border-gray-300 rounded") }}
+      </div>
+    </div>
+    <div class="mb-4 grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-gray-800 font-semibold mb-2">Poster Image URL</label>
+        {{ form.poster_image(class="w-full p-3 border border-gray-300 rounded") }}
+      </div>
+      <div>
+        <label class="block text-gray-800 font-semibold mb-2">Portrait Image URL</label>
+        {{ form.portrait_image(class="w-full p-3 border border-gray-300 rounded") }}
+      </div>
+    </div>
+    <div class="text-center mt-8">
+      {{ form.submit(class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded") }}
+    </div>
+  </form>
+</div>
+{% endblock %}

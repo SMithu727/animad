@@ -1,18 +1,29 @@
 <!-- templates/header.html -->
 <header class="py-8 px-12 transition-colors duration-300" style="background-color: rgba(45,43,68,0.5);">
     <div class="flex items-center justify-between w-full">
-      <!-- Left Column: Login and Sign-Up Buttons -->
+      <!-- Left Column: User Authentication Section -->
       <div class="flex items-center space-x-4">
-        <a href="{{ url_for('main.login') }}" class="flex items-center space-x-3 bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
-          <div class="relative">
-            <div class="absolute inline-flex h-4 w-4 rounded-full bg-red-500 opacity-75 animate-ping"></div>
-            <div class="relative inline-flex rounded-full h-4 w-4 bg-red-500"></div>
-          </div>
-          <span>تسجيل دخول</span>
-        </a>
-        <a href="{{ url_for('main.signup') }}" class="flex items-center bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
-          <span>تسجيل</span>
-        </a>
+        {% if current_user.is_authenticated %}
+          <!-- If the user is logged in, show their avatar (or a placeholder) and a sign-out button -->
+          <a href="{{ url_for('main.profile') }}" class="flex items-center space-x-2">
+            <img src="{{ current_user.avatar if current_user.avatar else url_for('static', filename='images/avatar-placeholder.png') }}" alt="User Avatar" class="h-12 w-12 rounded-full object-cover">
+          </a>
+          <a href="{{ url_for('main.logout') }}" class="bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
+            تسجيل خروج
+          </a>
+        {% else %}
+          <!-- If not logged in, show the login and signup buttons -->
+          <a href="{{ url_for('main.login') }}" class="flex items-center space-x-3 bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
+            <div class="relative">
+              <div class="absolute inline-flex h-4 w-4 rounded-full bg-red-500 opacity-75 animate-ping"></div>
+              <div class="relative inline-flex rounded-full h-4 w-4 bg-red-500"></div>
+            </div>
+            <span>تسجيل دخول</span>
+          </a>
+          <a href="{{ url_for('main.signup') }}" class="flex items-center bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
+            <span>تسجيل</span>
+          </a>
+        {% endif %}
       </div>
       <!-- Right Column: Search Bar, Logo, and Menu Button -->
       <div class="flex items-center space-x-6">
@@ -46,7 +57,7 @@
     </div>
   </header>
   
-  <!-- Menu Panel: Overlays the page, aligned to the right, starting just under the header (144px) -->
+  <!-- Menu Panel: Overlays the page, aligned to the right, starting under the header (144px) -->
   <div id="menu-panel" class="fixed top-[144px] right-0 w-80 h-[calc(100%-144px)] bg-gradient-to-b from-[#1a1a2e] to-[#0d0d1d] bg-opacity-95 backdrop-blur-lg shadow-2xl transform translate-x-full transition-transform duration-300 z-20" dir="rtl">
     <div class="p-6">
       <div class="flex items-center justify-between">
@@ -68,24 +79,22 @@
   
   <!-- Scripts -->
   <script>
-    // Select elements
+    // Toggle menu panel and animate the menu button flip
     const menuButton = document.getElementById('menu-button');
     const closeMenuButton = document.getElementById('close-menu');
     const menuPanel = document.getElementById('menu-panel');
   
-    // Toggle menu open/close with flip animation on the button
     menuButton.addEventListener('click', function() {
       menuPanel.classList.toggle('translate-x-full');
       menuButton.classList.toggle('rotate-y-180');
     });
   
-    // Close menu on close button click
     closeMenuButton.addEventListener('click', function() {
       menuPanel.classList.add('translate-x-full');
       menuButton.classList.remove('rotate-y-180');
     });
   
-    // Dynamic header scroll effect
+    // Dynamic header scroll effect remains as before
     window.addEventListener('scroll', function() {
       const header = document.querySelector('header');
       const scrollY = window.scrollY;

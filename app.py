@@ -1,17 +1,20 @@
 # app.py
 from flask import Blueprint, render_template, redirect, url_for, flash, request
-from flask_login import login_user, logout_user, login_required
-from forms import LoginForm, SignupForm
+import requests
+from flask_login import login_user, logout_user, login_required, current_user
+from forms import LoginForm, SignupForm, AdminAnimeForm
 from models import User, Anime
-from extensions import db  # Ensure you import your db extension
+from extensions import db
 
 bp = Blueprint('main', __name__)
 
 @bp.route('/')
 def index():
-    anime = Anime.query.first()
-    top_anime = [anime] * 5  # placeholder data
-    return render_template('index.html', new_anime=anime, top_anime=top_anime)
+    # Select 5 random anime for the spotlight slider
+    spotlights = Anime.query.order_by(db.func.random()).limit(5).all()
+    # Select 8 random anime for the trending section
+    trending = Anime.query.order_by(db.func.random()).limit(8).all()
+    return render_template('index.html', spotlights=spotlights, trending=trending)
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -55,3 +58,94 @@ def logout():
     logout_user()
     flash("Logged out successfully.", "info")
     return redirect(url_for('main.index'))
+
+@bp.route('/profile')
+def profile():
+    # Temporary placeholder: using index template
+    return render_template('index.html')
+
+@bp.route('/admin', methods=['GET', 'POST'])
+def admin():
+    form = AdminAnimeForm()
+    
+    if request.method == 'POST':
+        # If the "Fetch from MAL" button was pressed:
+        if "fetch" in request.form:
+            if not form.mal_id.data:
+                flash("Please enter a MAL ID to fetch data.", "danger")
+                return render_template("admin.html", form=form)
+            mal_id = form.mal_id.data
+            api_url = f"https://api.jikan.moe/v4/anime/{mal_id}"
+            response = requests.get(api_url)
+            if response.status_code == 200:
+                data = response.json().get("data", {})
+                if not data:
+                    flash("No data found for that MAL ID.", "danger")
+                else:
+                    form.title.data = data.get("title")
+                    form.rating.data = data.get("rating")
+                    form.quality.data = "HD"  # default value
+                    form.episode_count.data = str(data.get("episodes")) if data.get("episodes") is not None else "0"
+                    form.anime_type.data = data.get("type")
+                    form.duration.data = data.get("duration")
+                    form.description.data = data.get("synopsis")
+                    form.japanese_title.data = data.get("title_japanese")
+                    synonyms_list = data.get("title_synonyms") or []
+                    form.synonyms.data = ", ".join(synonyms_list) if synonyms_list else ""
+                    form.aired.data = data.get("aired", {}).get("string")
+                    form.premiered.data = data.get("season") or ""
+                    form.status.data = data.get("status")
+                    form.mal_score.data = str(data.get("score")) if data.get("score") is not None else "0.0"
+                    form.genres.data = ", ".join([genre.get("name") for genre in data.get("genres", [])])
+                    form.studios.data = ", ".join([studio.get("name") for studio in data.get("studios", [])])
+                    form.producers.data = ", ".join([producer.get("name") for producer in data.get("producers", [])])
+                    # Use the large image URL from the poster images
+                    poster_img = data.get("images", {}).get("jpg", {}).get("large_image_url")
+                    form.poster_image.data = poster_img
+                    # For the portrait image, use the trailer's maximum image URL if available, otherwise fallback to poster image
+                    trailer_img = data.get("trailer", {}).get("images", {}).get("maximum_image_url")
+                    form.portrait_image.data = trailer_img if trailer_img else poster_img
+                    flash("Data fetched successfully! You can edit the fields before submitting.", "success")
+            else:
+                flash("Error fetching data from MAL API.", "danger")
+            return render_template("admin.html", form=form)
+        
+        # If the "Add Anime" button was pressed:
+        elif "submit" in request.form:
+            if form.validate():
+                try:
+                    episode_count = int(form.episode_count.data)
+                except ValueError:
+                    episode_count = 0
+                try:
+                    mal_score = float(form.mal_score.data)
+                except ValueError:
+                    mal_score = 0.0
+                    
+                new_anime = Anime(
+                    title=form.title.data,
+                    rating=form.rating.data,
+                    quality=form.quality.data,
+                    episode_count=episode_count,
+                    type=form.anime_type.data,
+                    duration=form.duration.data,
+                    description=form.description.data,
+                    japanese_title=form.japanese_title.data,
+                    synonyms=form.synonyms.data,
+                    aired=form.aired.data,
+                    premiered=form.premiered.data,
+                    status=form.status.data,
+                    mal_score=mal_score,
+                    genres=form.genres.data,
+                    studios=form.studios.data,
+                    producers=form.producers.data,
+                    poster_image=form.poster_image.data,
+                    portrait_image=form.portrait_image.data
+                )
+                db.session.add(new_anime)
+                db.session.commit()
+                flash("Anime added successfully!", "success")
+                return redirect(url_for("main.admin"))
+            else:
+                flash("Please fix the errors in the form.", "danger")
+    return render_template("admin.html", form=form)

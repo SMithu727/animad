@@ -20,10 +20,8 @@ class Anime(db.Model):
     rating = db.Column(db.String(20))                        # e.g., "PG-13"
     quality = db.Column(db.String(10))                       # e.g., "HD"
     
-    # Counts (interpret these fields as needed)
+    # Count field
     episode_count = db.Column(db.Integer)                    # e.g., 12
-    season_count = db.Column(db.Integer)                     # e.g., 12
-    special_episode_count = db.Column(db.Integer)            # e.g., 12
     
     # Broadcast information
     type = db.Column(db.String(50))                          # e.g., "TV"
@@ -45,7 +43,7 @@ class Anime(db.Model):
     studios = db.Column(db.String(255))                      # e.g., "MAPPA"
     producers = db.Column(db.String(255))                    # e.g., "dugout, Shogakukan-Shueisha Productions"
     
-    # Poster image (URL or file path)
+    # Images
     poster_image = db.Column(db.String(255))                 # Poster image URL or file path
     portrait_image = db.Column(db.String(255))               # Additional portrait image URL or file path
     
