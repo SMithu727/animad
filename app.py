@@ -82,6 +82,20 @@ def profile():
         return redirect(url_for('main.profile'))
     return render_template("profile.html", form=form)
 
+@bp.route('/watch/<anime_title>')
+def watch(anime_title):
+    formatted_title = anime_title.replace("_", " ")
+    anime = Anime.query.filter_by(title=formatted_title).first_or_404()
+    
+    # Select 5 random anime for the spotlight slider
+    spotlights = Anime.query.order_by(db.func.random()).limit(5).all()
+    # Select 8 random anime for the trending section
+    trending = Anime.query.order_by(db.func.random()).limit(8).all()
+
+    return render_template("watch.html", anime=anime, spotlights=spotlights, trending=trending)
+
+
+
 @bp.route('/add_anime', methods=['GET', 'POST'])
 @login_required
 def add_anime():

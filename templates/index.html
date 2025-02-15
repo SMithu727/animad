@@ -30,21 +30,23 @@
                data-short="{{ anime.description | truncate(150, True, '...') }}">
                {{ anime.description | truncate(150, True, '...') }}
             </p>
-            <button class="mb-8 text-purple-300 hover:underline" onclick="toggleDescription({{ loop.index }})">المزيد...</button>
+            <!-- Link the buttons to the watch page -->
             <div class="flex gap-4">
-              <button class="flex items-center justify-center bg-purple-600 hover:bg-purple-700 text-white px-12 py-4 rounded-lg text-xl font-bold transition-all">
+              <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_') ) }}" 
+                 class="flex items-center justify-center bg-purple-600 hover:bg-purple-700 text-white px-12 py-4 rounded-lg text-xl font-bold transition-all">
                 <span>شاهد الآن</span>
                 <svg class="w-10 h-10" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="10" cy="10" r="9" fill="currentColor" opacity="0.2" />
                   <polygon points="8,7 8,13 14,10" fill="currentColor" />
                 </svg>
-              </button>
-              <button class="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-6 py-4 rounded-lg text-xl font-bold transition-all">
+              </a>
+              <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_') ) }}" 
+                 class="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-6 py-4 rounded-lg text-xl font-bold transition-all">
                 <span>التفاصيل</span>
                 <svg class="w-6 h-6 ml-2" style="transform: scaleX(-1);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -78,18 +80,20 @@
     <div class="relative">
       <div id="trending-container" class="flex gap-8 overflow-x-auto pb-4 px-8 no-scrollbar scroll-smooth">
         {% for anime in trending %}
-        <div class="w-[400px] relative group flex-shrink-0 transform transition duration-300 hover:scale-105 fade-in" style="animation-delay: {{ (loop.index0)*0.1 }}s;">
-          <!-- Using poster image for Trending section -->
-          <img src="{{ anime.poster_image }}" alt="{{ anime.title }}" class="w-full h-[600px] object-cover rounded-lg">
-          <div class="absolute top-2 left-2 bg-purple-900 text-white font-bold rounded-full w-10 h-10 flex items-center justify-center">{{ loop.index }}</div>
-          <div class="mt-2 text-center font-bold text-white">{{ anime.title }}</div>
-          <div class="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
-            <div class="text-2xl font-bold">{{ anime.title }}</div>
-            <div class="mt-1 text-lg">التقييم: {{ anime.rating }}</div>
-            <div class="mt-1 text-lg">MAL: {{ anime.mal_score }}</div>
-            <div class="mt-1 text-lg">النوع: {{ anime.type }}</div>
+        <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_') ) }}" class="block">
+          <div class="w-[400px] relative group flex-shrink-0 transform transition duration-300 hover:scale-105 fade-in" style="animation-delay: {{ (loop.index0)*0.1 }}s;">
+            <!-- Using poster image for Trending section -->
+            <img src="{{ anime.poster_image }}" alt="{{ anime.title }}" class="w-full h-[600px] object-cover rounded-lg">
+            <div class="absolute top-2 left-2 bg-purple-900 text-white font-bold rounded-full w-10 h-10 flex items-center justify-center">{{ loop.index }}</div>
+            <div class="mt-2 text-center font-bold text-white">{{ anime.title }}</div>
+            <div class="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
+              <div class="text-2xl font-bold">{{ anime.title }}</div>
+              <div class="mt-1 text-lg">التقييم: {{ anime.rating }}</div>
+              <div class="mt-1 text-lg">MAL: {{ anime.mal_score }}</div>
+              <div class="mt-1 text-lg">النوع: {{ anime.type }}</div>
+            </div>
           </div>
-        </div>
+        </a>
         {% endfor %}
       </div>
       <button id="scroll-left" class="absolute left-2 top-1/2 z-50 transform -translate-y-1/2 bg-gray-800 hover:bg-gray-700 text-white w-14 h-14 rounded-full flex items-center justify-center opacity-70 transition-transform duration-300 hover:scale-110">
@@ -125,32 +129,33 @@
           </div>
         </div>
         <!-- Updated Top Anime Menu -->
-<div class="bg-gradient-to-r from-[#1a1a2e] to-[#0d0d1d] p-6 rounded-lg shadow-lg">
-  <h3 class="text-xl font-bold text-white mb-4">أفضل الأنميات</h3>
-  <div class="grid grid-cols-1 gap-6">
-    {% for anime in trending %}
-    <a href="#" class="block transform transition duration-300 hover:scale-105 hover:shadow-2xl">
-      <img src="{{ anime.poster_image }}" alt="{{ anime.title }}" class="w-full h-auto object-cover rounded-lg">
-      <div class="mt-2 text-center">
-        <h3 class="text-2xl font-bold text-white">{{ anime.title }}</h3>
-      </div>
-    </a>
-    {% endfor %}
-  </div>
-</div>
-
+        <div class="bg-gradient-to-r from-[#1a1a2e] to-[#0d0d1d] p-6 rounded-lg shadow-lg">
+          <h3 class="text-xl font-bold text-white mb-4">أفضل الأنميات</h3>
+          <div class="grid grid-cols-1 gap-6">
+            {% for anime in trending %}
+            <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_') ) }}" class="block transform transition duration-300 hover:scale-105 hover:shadow-2xl">
+              <img src="{{ anime.poster_image }}" alt="{{ anime.title }}" class="w-full h-auto object-cover rounded-lg">
+              <div class="mt-2 text-center">
+                <h3 class="text-2xl font-bold text-white">{{ anime.title }}</h3>
+              </div>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
       </aside>
       <div class="lg:w-3/4">
         <h2 class="text-4xl font-bold text-purple-900 mb-6 text-right">آخر الحلقات</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">
-            <!-- Using poster image for Latest Episodes -->
-            <img src="{{ spotlights[0].poster_image }}" alt="{{ spotlights[0].title }}" class="w-full h-48 object-cover">
-            <div class="p-4">
-              <h3 class="text-xl font-bold text-white">{{ spotlights[0].title }}</h3>
-              <p class="text-sm text-gray-300">الحلقة 1</p>
+          <a href="{{ url_for('main.watch', anime_title=spotlights[0].title.replace(' ', '_') ) }}" class="block">
+            <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">
+              <!-- Using poster image for Latest Episodes -->
+              <img src="{{ spotlights[0].poster_image }}" alt="{{ spotlights[0].title }}" class="w-full h-48 object-cover">
+              <div class="p-4">
+                <h3 class="text-xl font-bold text-white">{{ spotlights[0].title }}</h3>
+                <p class="text-sm text-gray-300">الحلقة 1</p>
+              </div>
             </div>
-          </div>
+          </a>
           {# Repeat for additional episodes or use a loop if available #}
         </div>
       </div>
