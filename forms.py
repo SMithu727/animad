@@ -1,6 +1,6 @@
 # forms.py
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, IntegerField, TextAreaField, FloatField
+from wtforms import StringField, PasswordField, SubmitField, IntegerField, TextAreaField, FloatField, HiddenField
 from wtforms.validators import DataRequired, Email, EqualTo, Optional
 from flask_wtf.file import FileField, FileAllowed
 
@@ -56,3 +56,10 @@ class AdminAnimeForm(FlaskForm):
     
     fetch = SubmitField("Fetch from MAL")
     submit = SubmitField("Add Anime")
+
+class CommentForm(FlaskForm):
+    parent_id = HiddenField("Parent Comment ID")
+    content = TextAreaField('التعليق', 
+                            validators=[DataRequired()],
+                            render_kw={"placeholder": "اكتب تعليقك هنا..."})
+    submit = SubmitField('أضف التعليق')

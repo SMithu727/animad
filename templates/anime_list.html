@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}كل الأنمي{% endblock %}
+
+{% block content %}
+<div id="common-content" class="px-8 py-8" dir="rtl">
+  <h1 class="text-4xl font-bold text-purple-900 mb-6 text-right">كل الأنمي</h1>
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+    {% for anime in anime_list %}
+    <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}" class="block transform transition duration-300 hover:scale-105">
+      <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+        <img src="{{ anime.poster_image or url_for('static', filename='images/placeholder.png') }}" alt="{{ anime.title }}" class="w-full h-64 object-cover">
+        <div class="p-4">
+          <h2 class="text-xl font-bold text-white">{{ anime.title }}</h2>
+          <div class="mt-2 flex justify-between text-sm text-gray-300">
+            <span>التقييم: {{ anime.rating }}</span>
+            <span>MAL: {{ anime.mal_score }}</span>
+          </div>
+          <p class="mt-1 text-sm text-gray-300">النوع: {{ anime.type }}</p>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

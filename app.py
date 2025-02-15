@@ -1,10 +1,10 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify
 import os
 from werkzeug.utils import secure_filename
 import requests
 from flask_login import login_user, logout_user, login_required, current_user
-from forms import LoginForm, SignupForm, AdminAnimeForm, ProfileForm
-from models import User, Anime, Episode
+from forms import LoginForm, SignupForm, AdminAnimeForm, ProfileForm, CommentForm
+from models import User, Anime, Episode, Comment, CommentVote
 from extensions import db
 
 bp = Blueprint('main', __name__)
@@ -15,7 +15,7 @@ def index():
     spotlights = Anime.query.order_by(db.func.random()).limit(5).all()
     # Select 8 random anime for the trending section
     trending = Anime.query.order_by(db.func.random()).limit(8).all()
-    # Get latest episodes with pagination (40 per page)
+    # Get latest episodes with pagination (20 per page)
     latest_page = request.args.get('latest_page', 1, type=int)
     latest_episodes = Episode.query.order_by(Episode.id.desc()).paginate(page=latest_page, per_page=20, error_out=False)
     
@@ -90,24 +90,47 @@ def profile():
         return redirect(url_for('main.profile'))
     return render_template("profile.html", form=form)
 
-@bp.route('/watch/<anime_title>')
+@bp.route('/watch/<anime_title>', methods=['GET', 'POST'])
 def watch(anime_title):
     formatted_title = anime_title.replace("_", " ")
     anime = Anime.query.filter_by(title=formatted_title).first_or_404()
-    # Get episode number from query parameters; default to 1
     ep_number = request.args.get('ep', 1, type=int)
     selected_episode = Episode.query.filter_by(anime_id=anime.id, episode_number=ep_number).first()
+    
+    comment_form = CommentForm()
+    
+    if comment_form.validate_on_submit():
+        if current_user.is_authenticated:
+            parent_id = comment_form.parent_id.data if comment_form.parent_id.data else None
+            new_comment = Comment(
+                user_id=current_user.id,
+                anime_id=anime.id,
+                content=comment_form.content.data,
+                parent_id=parent_id
+            )
+            db.session.add(new_comment)
+            db.session.commit()
+            flash("تم إضافة التعليق!", "success")
+            return redirect(url_for('main.watch', anime_title=anime_title, ep=ep_number))
+        else:
+            flash("يجب تسجيل الدخول للتعليق.", "danger")
+            return redirect(url_for('main.login'))
+    
+    # Get only top-level comments (those without a parent)
+    comments = Comment.query.filter_by(anime_id=anime.id, parent_id=None)\
+                              .order_by(Comment.created_at.desc()).all()
 
     spotlights = Anime.query.order_by(db.func.random()).limit(5).all()
     trending = Anime.query.order_by(db.func.random()).limit(8).all()
     latest_page = request.args.get('latest_page', 1, type=int)
     latest_episodes = Episode.query.order_by(Episode.id.desc()).paginate(page=latest_page, per_page=40, error_out=False)
-
+    
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return render_template('_common_content.html', trending=trending, latest_episodes=latest_episodes)
     
     return render_template("watch.html", anime=anime, spotlights=spotlights, trending=trending, 
-                           selected_episode=selected_episode, latest_episodes=latest_episodes)
+                           selected_episode=selected_episode, latest_episodes=latest_episodes, 
+                           comment_form=comment_form, comments=comments)
 
 @bp.route('/add_anime', methods=['GET', 'POST'])
 @login_required
@@ -200,3 +223,70 @@ def add_anime():
             else:
                 flash("Please fix the errors in the form.", "danger")
     return render_template("add_anime.html", form=form)
+
+@bp.route('/anime')
+def all_anime():
+    # Get all anime sorted by title (or use any other ordering/pagination as needed)
+    anime_list = Anime.query.order_by(Anime.title).all()
+    return render_template("anime_list.html", anime_list=anime_list)
+
+
+# ---------------------- New Endpoints for Comment Voting ---------------------- #
+
+@bp.route('/like_comment', methods=['POST'])
+@login_required
+def like_comment():
+    data = request.get_json()
+    comment_id = data.get('comment_id')
+    if not comment_id:
+        return jsonify({"error": "No comment id provided"}), 400
+    comment = Comment.query.get(comment_id)
+    if not comment:
+        return jsonify({"error": "Comment not found"}), 404
+
+    # Check if the user has already voted on this comment.
+    vote = CommentVote.query.filter_by(user_id=current_user.id, comment_id=comment_id).first()
+    if vote:
+        if vote.vote == 1:
+            # Already liked, so do nothing.
+            return jsonify({"likes": comment.likes, "dislikes": comment.dislikes}), 200
+        else:
+            # Change vote from dislike to like.
+            vote.vote = 1
+            comment.likes += 1
+            comment.dislikes -= 1
+    else:
+        # New like vote.
+        vote = CommentVote(user_id=current_user.id, comment_id=comment_id, vote=1)
+        db.session.add(vote)
+        comment.likes += 1
+
+    db.session.commit()
+    return jsonify({"likes": comment.likes, "dislikes": comment.dislikes}), 200
+
+@bp.route('/dislike_comment', methods=['POST'])
+@login_required
+def dislike_comment():
+    data = request.get_json()
+    comment_id = data.get('comment_id')
+    if not comment_id:
+        return jsonify({"error": "No comment id provided"}), 400
+    comment = Comment.query.get(comment_id)
+    if not comment:
+        return jsonify({"error": "Comment not found"}), 404
+
+    vote = CommentVote.query.filter_by(user_id=current_user.id, comment_id=comment_id).first()
+    if vote:
+        if vote.vote == -1:
+            return jsonify({"likes": comment.likes, "dislikes": comment.dislikes}), 200
+        else:
+            vote.vote = -1
+            comment.dislikes += 1
+            comment.likes -= 1
+    else:
+        vote = CommentVote(user_id=current_user.id, comment_id=comment_id, vote=-1)
+        db.session.add(vote)
+        comment.dislikes += 1
+
+    db.session.commit()
+    return jsonify({"likes": comment.likes, "dislikes": comment.dislikes}), 200

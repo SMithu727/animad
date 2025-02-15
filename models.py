@@ -9,15 +9,15 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(128), nullable=False)
     profile_picture = db.Column(db.String(256), nullable=True)
     role = db.Column(db.String(20), nullable=False, default='user')
+    # Relationship to comments
+    comments = db.relationship('Comment', backref='user', lazy=True)
 
     def __repr__(self):
         return f'<User {self.username}>'
 
 class Anime(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    # Add the MAL code so we can link JSON episodes to this anime
     mal_code = db.Column(db.String(20), nullable=True)
-
     title = db.Column(db.String(255), nullable=False)
     rating = db.Column(db.String(20))
     quality = db.Column(db.String(10))
@@ -36,9 +36,9 @@ class Anime(db.Model):
     producers = db.Column(db.String(255))
     poster_image = db.Column(db.String(255))
     portrait_image = db.Column(db.String(255))
-
-    # Relationship to episodes
     episodes = db.relationship('Episode', backref='anime', lazy=True)
+    # Relationship to comments
+    comments = db.relationship('Comment', backref='anime', lazy=True)
 
     def __repr__(self):
         return f"<Anime {self.title}>"
@@ -48,8 +48,6 @@ class Episode(db.Model):
     anime_id = db.Column(db.Integer, db.ForeignKey('anime.id'), nullable=False)
     episode_number = db.Column(db.Integer, nullable=False)
     episode_url = db.Column(db.String(255))
-
-    # Relationship to embed sources
     embeds = db.relationship('EpisodeEmbed', backref='episode', lazy=True)
 
     def __repr__(self):
@@ -63,3 +61,31 @@ class EpisodeEmbed(db.Model):
 
     def __repr__(self):
         return f"<Embed {self.server} for Episode ID {self.episode_id}>"
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    anime_id = db.Column(db.Integer, db.ForeignKey('anime.id'), nullable=False)
+    parent_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=True)  # For replies
+    content = db.Column(db.Text, nullable=False)
+    likes = db.Column(db.Integer, default=0)
+    dislikes = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+
+    # Self-referential relationship for replies:
+    replies = db.relationship(
+        'Comment',
+        backref=db.backref('parent', remote_side=[id]),
+        lazy=True
+    )
+
+    def __repr__(self):
+        return f"<Comment {self.id} by User {self.user_id} on Anime {self.anime_id}>"
+
+class CommentVote(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=False)
+    vote = db.Column(db.Integer, nullable=False)  # 1 for like, -1 for dislike
+
+    __table_args__ = (db.UniqueConstraint('user_id', 'comment_id', name='_user_comment_uc'),)

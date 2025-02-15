@@ -1,95 +1,213 @@
 {% extends 'base.html' %}
 
-{% block title %}Watch {{ anime.title }}{% endblock %}
+{% block extra_styles %}
+<style>
+  /* Ensure the header remains on top */
+  header {
+    z-index: 50;
+  }
+  /* Overall container for the watch area */
+  .watch-section {
+    position: relative;
+  }
+  /* The top portion that will have the blurred background */
+  .watch-top {
+    position: relative;
+  }
+  /* The blurred background, starting 143px from the top of .watch-top */
+  .watch-bg {
+    position: absolute;
+    top: 143px; /* Leave the top (header area and initial purple) untouched */
+    left: 0;
+    right: 0;
+    bottom: 0; /* Ends at the bottom of the top section */
+    /* A purple overlay (adjust rgba values as desired) over the portrait image */
+    background: linear-gradient(rgba(128, 0, 128, 0.2), rgba(128, 0, 128, 0.2)), url('{{ anime.portrait_image }}');
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    filter: blur(20px) grayscale(100%);
+    z-index: 0;
+    pointer-events: none;
+  }
+  /* The content within the top section, positioned above the blurred bg */
+  .watch-top-content {
+    position: relative;
+    z-index: 10;
+  }
+</style>
+{% endblock %}
 
-{% block main_class %}bg-gray-900 text-white min-h-screen{% endblock %}
+{% block title %}مشاهدة {{ anime.title }}{% endblock %}
+
+{% block main_class %}text-white min-h-screen{% endblock %}
 
 {% block content %}
-<!-- Main Content Section -->
-<section class="w-full pt-[160px] pb-8 px-4 md:px-8 lg:px-12">
-  <div class="w-full mx-auto flex flex-col lg:flex-row gap-8 items-start">
-    <!-- Left Column: Anime Info -->
-    <div class="w-full lg:w-1/4 xl:w-1/5 space-y-6">
-      <div class="bg-gradient-to-br from-purple-900/50 to-gray-800 p-6 rounded-2xl shadow-2xl">
-        <img src="{{ anime.poster_image }}" alt="{{ anime.title }}" class="w-full h-auto rounded-xl shadow-lg">
-        <div class="mt-6 space-y-4">
-          <div class="flex flex-wrap gap-3">
-            <span class="bg-purple-600 px-4 py-2 rounded-full text-sm font-bold">{{ anime.mal_score }} MAL</span>
-            <span class="bg-gray-700 px-4 py-2 rounded-full text-sm">{{ anime.rating }}</span>
-            <span class="bg-gray-700 px-4 py-2 rounded-full text-sm">{{ anime.type }}</span>
-          </div>
-          <h2 class="text-2xl font-bold text-purple-400">{{ anime.title }}</h2>
-          <p id="anime-description" class="text-gray-300 text-lg leading-relaxed line-clamp-4 transition-all duration-300">
-            {{ anime.description }}
-          </p>
-          <button id="toggle-description" class="text-purple-400 hover:text-purple-300 font-semibold text-lg">
-            قراءة المزيد →
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right Column: Video + Episode Selector -->
-    <div class="flex-1">
-      <div class="w-full bg-gradient-to-br from-purple-900/50 to-gray-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-        <!-- Video Player -->
-        <div class="min-w-0">
-          <div class="relative aspect-video bg-gray-800">
-            <iframe
-              id="video-player"
-              class="absolute top-0 left-0 w-full h-full"
-              src="{% if selected_episode and selected_episode.embeds|length > 0 %}{{ selected_episode.embeds[0].link }}{% else %}https://www.youtube.com/embed/BMV4aZH1GXo{% endif %}"
-              frameborder="0"
-              allowfullscreen>
-            </iframe>
-          </div>
-        </div>
-        
-        <!-- Server List for Selected Episode -->
-        {% if selected_episode and selected_episode.embeds|length > 0 %}
-        <div class="p-4 bg-gray-800">
-          <h3 class="text-xl font-bold text-purple-400 mb-2">خوادم العرض:</h3>
-          <div class="flex gap-4">
-            {% for embed in selected_episode.embeds %}
-            <button class="server-btn bg-gray-700 hover:bg-purple-600 text-white px-4 py-2 rounded" data-link="{{ embed.link }}">
-              {{ embed.server }}
-            </button>
-            {% endfor %}
-          </div>
-        </div>
-        {% endif %}
-    
-        <!-- Episode Selector -->
-        <div class="w-full bg-gray-800/50 border-t border-gray-700/50 flex flex-col">
-          <div class="p-4">
-            <h3 class="text-xl font-bold mb-4 text-purple-400">الحلقات</h3>
-          </div>
-          <div class="overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-gray-800 pr-2 max-h-[210px]">
-            <div class="grid gap-2 grid-cols-[repeat(auto-fit,minmax(100px,1fr))]">
-              {% for episode in range(1, anime.episode_count + 1) %}
-              <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}?ep={{ episode }}"
-                 class="flex items-center justify-center bg-gray-700 hover:bg-purple-600 rounded-md w-full aspect-square transition-all duration-300 transform hover:scale-105">
-                <span class="text-base font-semibold text-white">EP {{ episode }}</span>
-              </a>
-              {% endfor %}
+<!-- Watch Section Container -->
+<div class="watch-section">
+  <!-- Top Portion (Video, Anime Info, Episode Selector) -->
+  <div class="watch-top">
+    {% if anime.portrait_image %}
+      <!-- Blurred, slightly purplish background -->
+      <div class="watch-bg"></div>
+    {% endif %}
+    <div class="watch-top-content">
+      <section class="w-full pt-[160px] pb-8 px-4 md:px-8 lg:px-12" dir="rtl">
+        <div class="w-full flex flex-col lg:flex-row gap-8 items-start">
+          <!-- Left Column: Anime Info -->
+          <div class="w-full lg:w-1/4 xl:w-1/5 space-y-6">
+            <div class="bg-gradient-to-br from-purple-900/50 to-gray-800 p-6 rounded-2xl shadow-2xl">
+              <img src="{{ anime.poster_image }}" alt="{{ anime.title }}" class="w-full h-auto rounded-xl shadow-lg">
+              <div class="mt-6 space-y-4">
+                <div class="flex flex-wrap gap-3">
+                  <span class="bg-purple-600 px-4 py-2 rounded-full text-sm font-bold">{{ anime.mal_score }} MAL</span>
+                  <span class="bg-gray-700 px-4 py-2 rounded-full text-sm">{{ anime.rating }}</span>
+                  <span class="bg-gray-700 px-4 py-2 rounded-full text-sm">{{ anime.type }}</span>
+                </div>
+                <h2 class="text-2xl font-bold text-purple-400">{{ anime.title }}</h2>
+                <p id="anime-description" class="text-gray-300 text-lg leading-relaxed line-clamp-4 transition-all duration-300">
+                  {{ anime.description }}
+                </p>
+                <button id="toggle-description" class="text-purple-400 hover:text-purple-300 font-semibold text-lg">
+                  قراءة المزيد →
+                </button>
+              </div>
             </div>
           </div>
-        </div> 
-      </div>
+
+          <!-- Right Column: Video and Episode Selector -->
+          <div class="flex-1">
+            <div class="w-full bg-gradient-to-br from-purple-900/50 to-gray-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+              <!-- Video Player -->
+              <div class="min-w-0">
+                <div class="relative aspect-video bg-gray-800">
+                  <iframe
+                    id="video-player"
+                    class="absolute top-0 left-0 w-full h-full"
+                    src="{% if selected_episode and selected_episode.embeds|length > 0 %}{{ selected_episode.embeds[0].link }}{% else %}https://www.youtube.com/embed/BMV4aZH1GXo{% endif %}"
+                    frameborder="0"
+                    allowfullscreen>
+                  </iframe>
+                </div>
+              </div>
+              
+              <!-- Server List for Selected Episode -->
+              {% if selected_episode and selected_episode.embeds|length > 0 %}
+              <div class="p-4 bg-gray-800">
+                <h3 class="text-xl font-bold text-purple-400 mb-2">خوادم العرض:</h3>
+                <div class="flex gap-4">
+                  {% for embed in selected_episode.embeds %}
+                  <button class="server-btn bg-gray-700 hover:bg-purple-600 text-white px-4 py-2 rounded" data-link="{{ embed.link }}">
+                    {{ embed.server }}
+                  </button>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+          
+              <!-- Episode Selector -->
+              <div class="w-full bg-gray-800/50 border-t border-gray-700/50 flex flex-col">
+                <div class="p-4">
+                  <h3 class="text-xl font-bold mb-4 text-purple-400">الحلقات</h3>
+                </div>
+                <div class="overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-gray-800 pr-2 max-h-[210px]">
+                  <div class="grid gap-2 grid-cols-[repeat(auto-fit,minmax(100px,1fr))]">
+                    {% for episode in range(1, anime.episode_count + 1) %}
+                    <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}?ep={{ episode }}"
+                       class="flex items-center justify-center bg-gray-700 hover:bg-purple-600 rounded-md w-full aspect-square transition-all duration-300 transform hover:scale-105">
+                      <span class="text-base font-semibold text-white">حلقة {{ episode }}</span>
+                    </a>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div> 
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
-</section>
 
-<!-- Include the common content (Trending, Latest Episodes, Top Anime, Genres, etc.) -->
+  <!-- Comment Section (No blurred background here) -->
+  <div class="watch-comments">
+    <section class="w-full my-8 bg-gray-800 p-6 rounded-lg" dir="rtl">
+      <h3 class="text-2xl font-bold text-purple-400 mb-4">التعليقات</h3>
+      {% if current_user.is_authenticated %}
+        <form method="POST" action="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_'), ep=request.args.get('ep', 1)) }}">
+          {{ comment_form.hidden_tag() }}
+          <input type="hidden" name="parent_id" id="parent_id" value="{{ comment_form.parent_id.data }}">
+          <textarea name="content" rows="3" class="w-full p-2 bg-gray-700 text-white rounded" placeholder="اكتب تعليقك هنا..."></textarea>
+          <button type="submit" class="mt-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded">أضف التعليق</button>
+        </form>
+      {% else %}
+        <p class="mb-4">الرجاء <a href="{{ url_for('main.login') }}" class="text-purple-400">تسجيل الدخول</a> للتعليق.</p>
+      {% endif %}
+      
+      <div class="mt-6 space-y-6">
+        {% for comment in comments %}
+          <div class="p-4 bg-gray-700 rounded" id="comment-{{ comment.id }}">
+            <div class="flex items-center mb-2">
+              <img src="{% if comment.user.profile_picture %}{{ url_for('static', filename='uploads/' ~ comment.user.profile_picture) }}{% else %}{{ url_for('static', filename='default-avatar.png') }}{% endif %}" alt="{{ comment.user.username }}" class="w-10 h-10 rounded-full ml-3">
+              <div>
+                <p class="font-bold">{{ comment.user.username }}</p>
+                <p class="text-sm text-gray-400">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+              </div>
+            </div>
+            <p class="mb-2">{{ comment.content }}</p>
+            <div class="flex items-center space-x-4">
+              <button id="like-button-{{ comment.id }}" class="text-sm text-purple-400 hover:text-purple-500" onclick="likeComment({{ comment.id }})">
+                إعجاب (<span id="like-count-{{ comment.id }}">{{ comment.likes }}</span>)
+              </button>
+              <button id="dislike-button-{{ comment.id }}" class="text-sm text-purple-400 hover:text-purple-500" onclick="dislikeComment({{ comment.id }})">
+                عدم إعجاب (<span id="dislike-count-{{ comment.id }}">{{ comment.dislikes }}</span>)
+              </button>
+              <button class="text-sm text-purple-400 hover:text-purple-500" onclick="setReply({{ comment.id }}, '{{ comment.user.username }}')">
+                رد
+              </button>
+            </div>
+            {% if comment.replies %}
+            <div class="mt-4 ml-8 space-y-4">
+              {% for reply in comment.replies %}
+                <div class="p-4 bg-gray-600 rounded" id="comment-{{ reply.id }}">
+                  <div class="flex items-center mb-2">
+                    <img src="{% if reply.user.profile_picture %}{{ url_for('static', filename='uploads/' ~ reply.user.profile_picture) }}{% else %}{{ url_for('static', filename='default-avatar.png') }}{% endif %}" alt="{{ reply.user.username }}" class="w-8 h-8 rounded-full ml-2">
+                    <div>
+                      <p class="font-bold">{{ reply.user.username }}</p>
+                      <p class="text-xs text-gray-300">{{ reply.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    </div>
+                  </div>
+                  <p class="mb-2 text-sm">{{ reply.content }}</p>
+                  <div class="flex items-center space-x-4">
+                    <button id="like-button-{{ reply.id }}" class="text-xs text-purple-400 hover:text-purple-500" onclick="likeComment({{ reply.id }})">
+                      إعجاب (<span id="like-count-{{ reply.id }}">{{ reply.likes }}</span>)
+                    </button>
+                    <button id="dislike-button-{{ reply.id }}" class="text-xs text-purple-400 hover:text-purple-500" onclick="dislikeComment({{ reply.id }})">
+                      عدم إعجاب (<span id="dislike-count-{{ reply.id }}">{{ reply.dislikes }}</span>)
+                    </button>
+                    <button class="text-xs text-purple-400 hover:text-purple-500" onclick="setReply({{ reply.id }}, '{{ reply.user.username }}')">
+                      رد
+                    </button>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Below this point, the rest of the page uses the base purple background -->
 {% include '_common_content.html' %}
 {% endblock %}
 
 {% block extra_scripts %}
-<!-- Script for Toggle Description -->
 <script>
+  // Toggle Description Script
   const description = document.getElementById('anime-description');
   const toggleBtn = document.getElementById('toggle-description');
-
   toggleBtn.addEventListener('click', () => {
     description.classList.toggle('line-clamp-4');
     description.classList.toggle('line-clamp-none');
@@ -97,10 +215,8 @@
       ? 'قراءة المزيد →' 
       : 'إظهار أقل ←';
   });
-</script>
 
-<!-- Script for Server Button Functionality -->
-<script>
+  // Server Button Functionality
   const videoPlayer = document.getElementById('video-player');
   const serverButtons = document.querySelectorAll('.server-btn');
   serverButtons.forEach(btn => {
@@ -108,5 +224,57 @@
       videoPlayer.src = btn.getAttribute('data-link');
     });
   });
+
+  // Like, Dislike, and Reply Functions
+  function setReply(commentId, username) {
+    document.getElementById('parent_id').value = commentId;
+    const textarea = document.querySelector('textarea[name="content"]');
+    textarea.placeholder = 'رد على ' + username;
+    textarea.focus();
+  }
+
+  function likeComment(commentId) {
+    const likeBtn = document.getElementById('like-button-' + commentId);
+    const dislikeBtn = document.getElementById('dislike-button-' + commentId);
+    if (likeBtn && !likeBtn.disabled) {
+      likeBtn.disabled = true;
+      if (dislikeBtn) { dislikeBtn.disabled = true; }
+      fetch('{{ url_for("main.like_comment") }}', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+           'X-CSRFToken': "{{ csrf_token() }}"
+         },
+         body: JSON.stringify({ comment_id: commentId })
+      })
+      .then(response => response.json())
+      .then(data => {
+         document.getElementById('like-count-' + commentId).textContent = data.likes;
+      })
+      .catch(err => console.error(err));
+    }
+  }
+
+  function dislikeComment(commentId) {
+    const dislikeBtn = document.getElementById('dislike-button-' + commentId);
+    const likeBtn = document.getElementById('like-button-' + commentId);
+    if (dislikeBtn && !dislikeBtn.disabled) {
+      dislikeBtn.disabled = true;
+      if (likeBtn) { likeBtn.disabled = true; }
+      fetch('{{ url_for("main.dislike_comment") }}', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+           'X-CSRFToken': "{{ csrf_token() }}"
+         },
+         body: JSON.stringify({ comment_id: commentId })
+      })
+      .then(response => response.json())
+      .then(data => {
+         document.getElementById('dislike-count-' + commentId).textContent = data.dislikes;
+      })
+      .catch(err => console.error(err));
+    }
+  }
 </script>
 {% endblock %}
