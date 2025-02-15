@@ -7,13 +7,12 @@
 {% block content %}
   <!-- Spotlight Slider Section -->
   <section id="spotlight-slider" class="relative h-screen w-full overflow-hidden">
-    <!-- Wrapper for slider, navigation, and dot indicators -->
     <div class="relative h-full w-full">
-      <!-- Slider Container (manual scrolling disabled) -->
+      <!-- Slider Container -->
       <div id="spotlight-container" class="flex h-full w-full snap-x snap-mandatory overflow-x-hidden no-scrollbar scroll-smooth">
         {% for anime in spotlights %}
         <div class="snap-center relative w-full h-screen flex-shrink-0">
-          <!-- Using portrait image for the spotlight slider -->
+          <!-- Background image -->
           <img src="{{ anime.portrait_image }}" alt="{{ anime.title }}" class="absolute inset-0 w-full h-full object-cover">
           <!-- Gradient overlay -->
           <div class="absolute inset-0 bg-gradient-to-l from-purple-900 to-transparent"></div>
@@ -25,13 +24,17 @@
               <span class="bg-gray-600 px-4 py-2 rounded">{{ anime.rating }}</span>
               <span class="bg-gray-600 px-4 py-2 rounded">{{ anime.type }}</span>
             </div>
+            <!-- Description with toggle -->
             <p id="description-{{ loop.index }}" class="text-lg mb-2 leading-relaxed"
-               data-full="{{ anime.description }}"
-               data-short="{{ anime.description | truncate(150, True, '...') }}">
-               {{ anime.description | truncate(150, True, '...') }}
+               data-full="{{ anime.description | default('No description available', true) }}"
+               data-short="{{ (anime.description | default('No description available', true)) | truncate(150, True, '...') }}">
+               {{ (anime.description | default('No description available', true)) | truncate(150, True, '...') }}
             </p>
-            <!-- Link the buttons to the watch page -->
-            <div class="flex gap-4">
+            <button id="toggle-description-{{ loop.index }}" onclick="toggleDescription({{ loop.index }})" class="text-purple-400 hover:text-purple-300 font-semibold text-lg">
+              المزيد...
+            </button>
+            <!-- Action Buttons -->
+            <div class="flex gap-4 mt-4">
               <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_') ) }}" 
                  class="flex items-center justify-center bg-purple-600 hover:bg-purple-700 text-white px-12 py-4 rounded-lg text-xl font-bold transition-all">
                 <span>شاهد الآن</span>
@@ -53,7 +56,7 @@
         {% endfor %}
       </div>
       
-      <!-- Combined Navigation Buttons & Dot Indicators -->
+      <!-- Navigation Buttons & Dot Indicators -->
       <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 w-full max-w-md flex items-center justify-between z-50">
         <button id="spotlight-prev" class="bg-gray-800 hover:bg-gray-700 text-white w-12 h-12 rounded-full flex items-center justify-center opacity-80 transition-transform duration-300 hover:scale-110">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -74,93 +77,8 @@
     </div>
   </section>
 
-  <!-- Trending Section -->
-  <section class="px-8 py-8" dir="rtl">
-    <h2 class="text-4xl font-bold text-purple-900 mb-6 text-right">الرائجة</h2>
-    <div class="relative">
-      <div id="trending-container" class="flex gap-8 overflow-x-auto pb-4 px-8 no-scrollbar scroll-smooth">
-        {% for anime in trending %}
-        <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_') ) }}" class="block">
-          <div class="w-[400px] relative group flex-shrink-0 transform transition duration-300 hover:scale-105 fade-in" style="animation-delay: {{ (loop.index0)*0.1 }}s;">
-            <!-- Using poster image for Trending section -->
-            <img src="{{ anime.poster_image }}" alt="{{ anime.title }}" class="w-full h-[600px] object-cover rounded-lg">
-            <div class="absolute top-2 left-2 bg-purple-900 text-white font-bold rounded-full w-10 h-10 flex items-center justify-center">{{ loop.index }}</div>
-            <div class="mt-2 text-center font-bold text-white">{{ anime.title }}</div>
-            <div class="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
-              <div class="text-2xl font-bold">{{ anime.title }}</div>
-              <div class="mt-1 text-lg">التقييم: {{ anime.rating }}</div>
-              <div class="mt-1 text-lg">MAL: {{ anime.mal_score }}</div>
-              <div class="mt-1 text-lg">النوع: {{ anime.type }}</div>
-            </div>
-          </div>
-        </a>
-        {% endfor %}
-      </div>
-      <button id="scroll-left" class="absolute left-2 top-1/2 z-50 transform -translate-y-1/2 bg-gray-800 hover:bg-gray-700 text-white w-14 h-14 rounded-full flex items-center justify-center opacity-70 transition-transform duration-300 hover:scale-110">
-        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <button id="scroll-right" class="absolute right-2 top-1/2 z-50 transform -translate-y-1/2 bg-gray-800 hover:bg-gray-700 text-white w-14 h-14 rounded-full flex items-center justify-center opacity-70 transition-transform duration-300 hover:scale-110">
-        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-    </div>
-  </section>
-
-  <!-- Latest Episodes Section with Sidebar -->
-  <section class="px-8 py-8" dir="rtl">
-    <div class="flex flex-col lg:flex-row gap-8">
-      <aside class="lg:w-1/4 space-y-8">
-        <!-- Updated Genres Menu -->
-        <div class="bg-gradient-to-r from-[#1a1a2e] to-[#0d0d1d] p-6 rounded-lg shadow-lg">
-          <h3 class="text-xl font-bold text-white mb-4">التصنيفات</h3>
-          <div class="grid grid-cols-3 gap-4">
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">أكشن</a>
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">رومانسي</a>
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">كوميدي</a>
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">دراما</a>
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">رعب</a>
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">خيال علمي</a>
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">إيسيكاي</a>
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">مدرسي</a>
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">مغامرات</a>
-          </div>
-        </div>
-        <!-- Updated Top Anime Menu -->
-        <div class="bg-gradient-to-r from-[#1a1a2e] to-[#0d0d1d] p-6 rounded-lg shadow-lg">
-          <h3 class="text-xl font-bold text-white mb-4">أفضل الأنميات</h3>
-          <div class="grid grid-cols-1 gap-6">
-            {% for anime in trending %}
-            <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_') ) }}" class="block transform transition duration-300 hover:scale-105 hover:shadow-2xl">
-              <img src="{{ anime.poster_image }}" alt="{{ anime.title }}" class="w-full h-auto object-cover rounded-lg">
-              <div class="mt-2 text-center">
-                <h3 class="text-2xl font-bold text-white">{{ anime.title }}</h3>
-              </div>
-            </a>
-            {% endfor %}
-          </div>
-        </div>
-      </aside>
-      <div class="lg:w-3/4">
-        <h2 class="text-4xl font-bold text-purple-900 mb-6 text-right">آخر الحلقات</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          <a href="{{ url_for('main.watch', anime_title=spotlights[0].title.replace(' ', '_') ) }}" class="block">
-            <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">
-              <!-- Using poster image for Latest Episodes -->
-              <img src="{{ spotlights[0].poster_image }}" alt="{{ spotlights[0].title }}" class="w-full h-48 object-cover">
-              <div class="p-4">
-                <h3 class="text-xl font-bold text-white">{{ spotlights[0].title }}</h3>
-                <p class="text-sm text-gray-300">الحلقة 1</p>
-              </div>
-            </div>
-          </a>
-          {# Repeat for additional episodes or use a loop if available #}
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- Include the common content partial (Trending, Latest Episodes, Top Anime, Genres, etc.) -->
+  {% include '_common_content.html' %}
 {% endblock %}
 
 {% block extra_scripts %}
@@ -205,27 +123,26 @@
       updateDots();
     });
 
+    // Function to toggle description text
     function toggleDescription(slideIndex) {
       const descEl = document.getElementById("description-" + slideIndex);
+      const btnEl = document.getElementById("toggle-description-" + slideIndex);
       const fullText = descEl.getAttribute("data-full");
       const shortText = descEl.getAttribute("data-short");
-      descEl.textContent = (descEl.textContent.trim() === shortText) ? fullText : shortText;
+      
+      if(descEl.textContent.trim() === shortText) {
+        descEl.textContent = fullText;
+        btnEl.textContent = "إظهار أقل";
+      } else {
+        descEl.textContent = shortText;
+        btnEl.textContent = "المزيد...";
+      }
     }
 
     spotlightContainer.addEventListener('wheel', function(e) {
       e.preventDefault();
     }, { passive: false });
 
-    // Initialize the dot indicators on page load
     updateDots();
-  </script>
-  <!-- Trending Section Scroll Buttons -->
-  <script>
-    document.getElementById('scroll-left').addEventListener('click', function() {
-      document.getElementById('trending-container').scrollBy({ left: -400, behavior: 'smooth' });
-    });
-    document.getElementById('scroll-right').addEventListener('click', function() {
-      document.getElementById('trending-container').scrollBy({ left: 400, behavior: 'smooth' });
-    });
   </script>
 {% endblock %}

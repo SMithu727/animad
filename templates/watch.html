@@ -7,7 +7,6 @@
 {% block content %}
 <!-- Main Content Section -->
 <section class="w-full pt-[160px] pb-8 px-4 md:px-8 lg:px-12">
-  <!-- Change items-stretch to items-start so columns size independently -->
   <div class="w-full mx-auto flex flex-col lg:flex-row gap-8 items-start">
     <!-- Left Column: Anime Info -->
     <div class="w-full lg:w-1/4 xl:w-1/5 space-y-6">
@@ -30,133 +29,62 @@
       </div>
     </div>
 
-    <!-- Right Column: Video + Episodes -->
+    <!-- Right Column: Video + Episode Selector -->
     <div class="flex-1">
-      <!-- Removed h-full from the container so it doesn't stretch to match left column -->
       <div class="w-full bg-gradient-to-br from-purple-900/50 to-gray-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         <!-- Video Player -->
         <div class="min-w-0">
           <div class="relative aspect-video bg-gray-800">
             <iframe
+              id="video-player"
               class="absolute top-0 left-0 w-full h-full"
-              src="https://www.youtube.com/embed/BMV4aZH1GXo"
+              src="{% if selected_episode and selected_episode.embeds|length > 0 %}{{ selected_episode.embeds[0].link }}{% else %}https://www.youtube.com/embed/BMV4aZH1GXo{% endif %}"
               frameborder="0"
               allowfullscreen>
             </iframe>
           </div>
         </div>
+        
+        <!-- Server List for Selected Episode -->
+        {% if selected_episode and selected_episode.embeds|length > 0 %}
+        <div class="p-4 bg-gray-800">
+          <h3 class="text-xl font-bold text-purple-400 mb-2">خوادم العرض:</h3>
+          <div class="flex gap-4">
+            {% for embed in selected_episode.embeds %}
+            <button class="server-btn bg-gray-700 hover:bg-purple-600 text-white px-4 py-2 rounded" data-link="{{ embed.link }}">
+              {{ embed.server }}
+            </button>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
     
-        <!-- Episode Selector (Now below the player) -->
+        <!-- Episode Selector -->
         <div class="w-full bg-gray-800/50 border-t border-gray-700/50 flex flex-col">
-          <!-- Header -->
           <div class="p-4">
             <h3 class="text-xl font-bold mb-4 text-purple-400">الحلقات</h3>
           </div>
- <!-- Scrollable Episode Grid with Max Height -->
-<div class="overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-gray-800 pr-2 max-h-[210px]">
-    <div class="grid gap-2 grid-cols-[repeat(auto-fit,minmax(100px,1fr))]">
-      {% for episode in range(1, anime.episode_count + 1) %}
-      <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}?ep={{ episode }}"
-         class="flex items-center justify-center bg-gray-700 hover:bg-purple-600 rounded-md w-full aspect-square transition-all duration-300 transform hover:scale-105">
-        <span class="text-base font-semibold text-white">EP {{ episode }}</span>
-      </a>
-      {% endfor %}
-    </div>
-  </div>
+          <div class="overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-gray-800 pr-2 max-h-[210px]">
+            <div class="grid gap-2 grid-cols-[repeat(auto-fit,minmax(100px,1fr))]">
+              {% for episode in range(1, anime.episode_count + 1) %}
+              <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}?ep={{ episode }}"
+                 class="flex items-center justify-center bg-gray-700 hover:bg-purple-600 rounded-md w-full aspect-square transition-all duration-300 transform hover:scale-105">
+                <span class="text-base font-semibold text-white">EP {{ episode }}</span>
+              </a>
+              {% endfor %}
+            </div>
+          </div>
         </div> 
       </div>
     </div>
   </div>
 </section>
 
-<!-- Trending Section -->
-<section class="px-8 py-8" dir="rtl">
-  <h2 class="text-4xl font-bold text-purple-900 mb-6 text-right">الرائجة</h2>
-  <div class="relative">
-    <div id="trending-container" class="flex gap-8 overflow-x-auto pb-4 px-8 no-scrollbar scroll-smooth">
-      {% for anime in trending %}
-      <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_') ) }}" class="block">
-        <div class="w-[400px] relative group flex-shrink-0 transform transition duration-300 hover:scale-105 fade-in" style="animation-delay: {{ (loop.index0)*0.1 }}s;">
-          <!-- Using poster image for Trending section -->
-          <img src="{{ anime.poster_image }}" alt="{{ anime.title }}" class="w-full h-[600px] object-cover rounded-lg">
-          <div class="absolute top-2 left-2 bg-purple-900 text-white font-bold rounded-full w-10 h-10 flex items-center justify-center">{{ loop.index }}</div>
-          <div class="mt-2 text-center font-bold text-white">{{ anime.title }}</div>
-          <div class="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
-            <div class="text-2xl font-bold">{{ anime.title }}</div>
-            <div class="mt-1 text-lg">التقييم: {{ anime.rating }}</div>
-            <div class="mt-1 text-lg">MAL: {{ anime.mal_score }}</div>
-            <div class="mt-1 text-lg">النوع: {{ anime.type }}</div>
-          </div>
-        </div>
-      </a>
-      {% endfor %}
-    </div>
-    <button id="scroll-left" class="absolute left-2 top-1/2 z-50 transform -translate-y-1/2 bg-gray-800 hover:bg-gray-700 text-white w-14 h-14 rounded-full flex items-center justify-center opacity-70 transition-transform duration-300 hover:scale-110">
-      <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-      </svg>
-    </button>
-    <button id="scroll-right" class="absolute right-2 top-1/2 z-50 transform -translate-y-1/2 bg-gray-800 hover:bg-gray-700 text-white w-14 h-14 rounded-full flex items-center justify-center opacity-70 transition-transform duration-300 hover:scale-110">
-      <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-      </svg>
-    </button>
-  </div>
-</section>
+<!-- Include the common content (Trending, Latest Episodes, Top Anime, Genres, etc.) -->
+{% include '_common_content.html' %}
+{% endblock %}
 
-<!-- Latest Episodes Section with Sidebar -->
-<section class="px-8 py-8" dir="rtl">
-  <div class="flex flex-col lg:flex-row gap-8">
-    <aside class="lg:w-1/4 space-y-8">
-      <!-- Updated Genres Menu -->
-      <div class="bg-gradient-to-r from-[#1a1a2e] to-[#0d0d1d] p-6 rounded-lg shadow-lg">
-        <h3 class="text-xl font-bold text-white mb-4">التصنيفات</h3>
-        <div class="grid grid-cols-3 gap-4">
-          <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">أكشن</a>
-          <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">رومانسي</a>
-          <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">كوميدي</a>
-          <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">دراما</a>
-          <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">رعب</a>
-          <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">خيال علمي</a>
-          <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">إيسيكاي</a>
-          <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">مدرسي</a>
-          <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">مغامرات</a>
-        </div>
-      </div>
-      <!-- Updated Top Anime Menu -->
-      <div class="bg-gradient-to-r from-[#1a1a2e] to-[#0d0d1d] p-6 rounded-lg shadow-lg">
-        <h3 class="text-xl font-bold text-white mb-4">أفضل الأنميات</h3>
-        <div class="grid grid-cols-1 gap-6">
-          {% for anime in trending %}
-          <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_') ) }}" class="block transform transition duration-300 hover:scale-105 hover:shadow-2xl">
-            <img src="{{ anime.poster_image }}" alt="{{ anime.title }}" class="w-full h-auto object-cover rounded-lg">
-            <div class="mt-2 text-center">
-              <h3 class="text-2xl font-bold text-white">{{ anime.title }}</h3>
-            </div>
-          </a>
-          {% endfor %}
-        </div>
-      </div>
-    </aside>
-    <div class="lg:w-3/4">
-      <h2 class="text-4xl font-bold text-purple-900 mb-6 text-right">آخر الحلقات</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        {% for anime in spotlights %}
-        <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_') ) }}" class="block">
-          <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">
-            <img src="{{ anime.poster_image }}" alt="{{ anime.title }}" class="w-full h-48 object-cover">
-            <div class="p-4">
-              <h3 class="text-xl font-bold text-white">{{ anime.title }}</h3>
-              <p class="text-sm text-gray-300">الحلقة 1</p>
-            </div>
-          </div>
-        </a>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-</section>
-
+{% block extra_scripts %}
 <!-- Script for Toggle Description -->
 <script>
   const description = document.getElementById('anime-description');
@@ -171,13 +99,14 @@
   });
 </script>
 
-<!-- Trending Section Scroll Buttons -->
+<!-- Script for Server Button Functionality -->
 <script>
-  document.getElementById('scroll-left').addEventListener('click', function() {
-    document.getElementById('trending-container').scrollBy({ left: -400, behavior: 'smooth' });
-  });
-  document.getElementById('scroll-right').addEventListener('click', function() {
-    document.getElementById('trending-container').scrollBy({ left: 400, behavior: 'smooth' });
+  const videoPlayer = document.getElementById('video-player');
+  const serverButtons = document.querySelectorAll('.server-btn');
+  serverButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      videoPlayer.src = btn.getAttribute('data-link');
+    });
   });
 </script>
 {% endblock %}

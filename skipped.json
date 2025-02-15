@@ -1,0 +1,136 @@
+{
+    "skipped_animes": [
+        {
+            "anime_name": "Bishoujo Senshi Sailor Moon Eternal Movie 2",
+            "mal_code": "40429",
+            "anime_url": "https://witanime.cyou/anime/bishoujo-senshi-sailor-moon-eternal-movie-2/",
+            "episodes": [
+                "No episode found"
+            ]
+        },
+        {
+            "anime_name": "One Room, Hiatari Futsuu, Tenshi-tsuki.",
+            "mal_code": "56838",
+            "anime_url": "https://witanime.cyou/anime/one-room-hiatari-futsuu-tenshi-tsuki/",
+            "episodes": [
+                "No episode found"
+            ]
+        }
+    ],
+    "skipped_episodes": [
+        {
+            "anime_name": "Gintama'",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/gintama-2-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "Liz to Aoi Tori",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/liz-to-aoi-tori-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "Natsume Yuujinchou Movie: Utsusemi ni Musubu",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/natsume-yuujinchou-movie-utsusemi-ni-musubu-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "Fate/kaleid liner Prisma☆Illya Movie: Licht - Namae no Nai Shoujo",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/fate-kaleid-liner-prisma%e2%98%86illya-movie-licht-namae-no-nai-shoujo-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "Yahari Ore no Seishun Love Comedy wa Machigatteiru. Kan: Dakara, Shishunki wa Owarazu ni, Seishun wa Tsuzuiteiku.",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/yahari-ore-no-seishun-love-comedy-wa-machigatteiru-kan-dakara-shishunki-wa-owarazu-ni-seishun-wa-tsuzuiteiku-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "Kaguya-sama wa Kokurasetai: Tensai-tachi no Renai Zunousen OVA",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/kaguya-sama-wa-kokurasetai-tensai-tachi-no-renai-zunousen-ova-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "Hokkyoku Hyakkaten no Concierge-san",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/hokkyoku-hyakkaten-no-concierge-san-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "No Game No Life: Zero",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/no-game-no-life-zero-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "Kekkon Yubiwa Monogatari",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/kekkon-yubiwa-monogatari-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "Kuramerukagari",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/kuramerukagari-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "One Piece: Adventure of Nebulandia",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/one-piece-adventure-of-nebulandia-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "Boku no Hero Academia: UA Heroes Battle",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/boku-no-hero-academia-ua-heroes-battle-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "Re:Zero kara Hajimeru Isekai Seikatsu - Memory Snow",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/rezero-kara-hajimeru-isekai-seikatsu-memory-snow-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "Hibike! Euphonium: Kakedasu Monaka",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/hibike-euphonium-kakedasu-monaka-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "Triage X",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/triage-x-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "Kill la Kill Specials",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/kill-la-kill-specials-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "One Piece: Episode of Sorajima",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/one-piece-episode-of-sorajima-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "Working!!!: Lord of the Takanashi",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/working-lord-of-the-takanashi-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        },
+        {
+            "anime_name": "Totsukuni no Shoujo (2022)",
+            "episode": 1,
+            "episode_url": "https://witanime.cyou/episode/totsukuni-no-shoujo-2022-%D8%A7%D9%84%D8%AD%D9%84%D9%82%D8%A9-1/",
+            "reason": "No embed links"
+        }
+    ]
+}

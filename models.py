@@ -6,11 +6,8 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    # NEVER store plaintext passwords in production!
     password = db.Column(db.String(128), nullable=False)
-    # New field for storing the filename (or path) of the uploaded profile picture
     profile_picture = db.Column(db.String(256), nullable=True)
-    # New field for user roles: 'user', 'admin', or 'mod'
     role = db.Column(db.String(20), nullable=False, default='user')
 
     def __repr__(self):
@@ -18,38 +15,51 @@ class User(UserMixin, db.Model):
 
 class Anime(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    
-    # Basic details
-    title = db.Column(db.String(255), nullable=False)      # e.g., "Ranma 1/2"
-    rating = db.Column(db.String(20))                        # e.g., "PG-13"
-    quality = db.Column(db.String(10))                       # e.g., "HD"
-    
-    # Count field
-    episode_count = db.Column(db.Integer)                    # e.g., 12
-    
-    # Broadcast information
-    type = db.Column(db.String(50))                          # e.g., "TV"
-    duration = db.Column(db.String(20))                      # e.g., "23m"
-    
-    # Descriptive text
-    description = db.Column(db.Text)                         # Long description text
-    japanese_title = db.Column(db.String(255))               # e.g., "らんま1/2"
-    synonyms = db.Column(db.String(255))                     # e.g., "Ranma 1/2, Ranma ½ Nettou Hen"
-    
-    # Airing and status
-    aired = db.Column(db.String(255))                        # e.g., "Oct 6, 2024 to Dec 22, 2024"
-    premiered = db.Column(db.String(50))                     # e.g., "Fall 2024"
-    status = db.Column(db.String(50))                        # e.g., "Finished Airing"
-    mal_score = db.Column(db.Float)                          # e.g., 8.13
-    
-    # Additional details
-    genres = db.Column(db.String(255))                       # e.g., "Action, Comedy, Ecchi, Romance"
-    studios = db.Column(db.String(255))                      # e.g., "MAPPA"
-    producers = db.Column(db.String(255))                    # e.g., "dugout, Shogakukan-Shueisha Productions"
-    
-    # Images
-    poster_image = db.Column(db.String(255))                 # Poster image URL or file path
-    portrait_image = db.Column(db.String(255))               # Additional portrait image URL or file path
-    
+    # Add the MAL code so we can link JSON episodes to this anime
+    mal_code = db.Column(db.String(20), nullable=True)
+
+    title = db.Column(db.String(255), nullable=False)
+    rating = db.Column(db.String(20))
+    quality = db.Column(db.String(10))
+    episode_count = db.Column(db.Integer)
+    type = db.Column(db.String(50))
+    duration = db.Column(db.String(20))
+    description = db.Column(db.Text)
+    japanese_title = db.Column(db.String(255))
+    synonyms = db.Column(db.String(255))
+    aired = db.Column(db.String(255))
+    premiered = db.Column(db.String(50))
+    status = db.Column(db.String(50))
+    mal_score = db.Column(db.Float)
+    genres = db.Column(db.String(255))
+    studios = db.Column(db.String(255))
+    producers = db.Column(db.String(255))
+    poster_image = db.Column(db.String(255))
+    portrait_image = db.Column(db.String(255))
+
+    # Relationship to episodes
+    episodes = db.relationship('Episode', backref='anime', lazy=True)
+
     def __repr__(self):
         return f"<Anime {self.title}>"
+
+class Episode(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    anime_id = db.Column(db.Integer, db.ForeignKey('anime.id'), nullable=False)
+    episode_number = db.Column(db.Integer, nullable=False)
+    episode_url = db.Column(db.String(255))
+
+    # Relationship to embed sources
+    embeds = db.relationship('EpisodeEmbed', backref='episode', lazy=True)
+
+    def __repr__(self):
+        return f"<Episode {self.episode_number} of Anime ID {self.anime_id}>"
+
+class EpisodeEmbed(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    episode_id = db.Column(db.Integer, db.ForeignKey('episode.id'), nullable=False)
+    server = db.Column(db.String(64), nullable=False)
+    link = db.Column(db.String(255), nullable=False)
+
+    def __repr__(self):
+        return f"<Embed {self.server} for Episode ID {self.episode_id}>"

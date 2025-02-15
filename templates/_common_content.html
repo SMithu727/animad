@@ -1,0 +1,172 @@
+<div id="common-content">
+    <!-- Trending Section -->
+    <section class="px-8 py-8" dir="rtl">
+      <h2 class="text-4xl font-bold text-purple-900 mb-6 text-right">الرائجة</h2>
+      <div class="relative">
+        <div id="trending-container" class="flex gap-8 overflow-x-auto pb-4 px-8 no-scrollbar scroll-smooth">
+          {% for anime in trending %}
+          <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}" class="block">
+            <div class="w-[400px] relative group flex-shrink-0 transform transition duration-300 hover:scale-105 fade-in" style="animation-delay: {{ (loop.index0)*0.1 }}s;">
+              <img src="{{ anime.poster_image }}" alt="{{ anime.title }}" class="w-full h-[600px] object-cover rounded-lg">
+              <div class="absolute top-2 left-2 bg-purple-900 text-white font-bold rounded-full w-10 h-10 flex items-center justify-center">{{ loop.index }}</div>
+              <div class="mt-2 text-center font-bold text-white">{{ anime.title }}</div>
+              <div class="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
+                <div class="text-2xl font-bold">{{ anime.title }}</div>
+                <div class="mt-1 text-lg">التقييم: {{ anime.rating }}</div>
+                <div class="mt-1 text-lg">MAL: {{ anime.mal_score }}</div>
+                <div class="mt-1 text-lg">النوع: {{ anime.type }}</div>
+              </div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+        <!-- Trending Scroll Buttons -->
+        <button id="scroll-left" class="absolute left-2 top-1/2 z-50 transform -translate-y-1/2 bg-gray-800 hover:bg-gray-700 text-white w-14 h-14 rounded-full flex items-center justify-center opacity-70 transition-transform duration-300 hover:scale-110">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <button id="scroll-right" class="absolute right-2 top-1/2 z-50 transform -translate-y-1/2 bg-gray-800 hover:bg-gray-700 text-white w-14 h-14 rounded-full flex items-center justify-center opacity-70 transition-transform duration-300 hover:scale-110">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </section>
+    
+    <!-- Latest Episodes Section with Pagination -->
+    <section class="px-8 py-8" dir="rtl">
+      <div class="flex flex-col lg:flex-row gap-8 items-stretch">
+        <aside class="lg:w-1/4 space-y-8">
+          <!-- Genres Menu -->
+          <div class="bg-gradient-to-r from-[#1a1a2e] to-[#0d0d1d] p-6 rounded-lg shadow-lg">
+            <h3 class="text-xl font-bold text-white mb-4">التصنيفات</h3>
+            <div class="grid grid-cols-3 gap-4">
+              <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">أكشن</a>
+              <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">رومانسي</a>
+              <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">كوميدي</a>
+              <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">دراما</a>
+              <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">رعب</a>
+              <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">خيال علمي</a>
+              <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">إيسيكاي</a>
+              <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">مدرسي</a>
+              <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">مغامرات</a>
+            </div>
+          </div>
+          <!-- Top Anime Menu (Smaller Posters & Compact Layout) -->
+<div class="top-anime-menu bg-gradient-to-r from-[#1a1a2e] to-[#0d0d1d] p-6 rounded-lg shadow-lg overflow-y-auto">
+    <h3 class="text-xl font-bold text-white mb-4">أفضل الأنميات</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for anime in trending %}
+      <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}" class="block transform transition duration-300 hover:scale-105 hover:shadow-lg">
+        <div class="flex items-center space-x-4 bg-gray-800 p-3 rounded-lg shadow-md">
+          <img src="{{ anime.poster_image }}" alt="{{ anime.title }}" class="w-16 h-24 object-cover rounded-md">
+          <div>
+            <h3 class="text-lg font-semibold text-white">{{ anime.title }}</h3>
+            <p class="text-sm text-gray-400">التقييم: {{ anime.rating }}</p>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  
+        </aside>
+        <div class="lg:w-3/4 latest-episodes-container" id="latest-episodes-container">
+          <h2 class="text-4xl font-bold text-purple-900 mb-6 text-right">آخر الحلقات</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8" id="latest-episodes-grid">
+            {% for episode in latest_episodes.items %}
+            <a href="{{ url_for('main.watch', anime_title=episode.anime.title.replace(' ', '_'), ep=episode.episode_number, latest_page=latest_episodes.page) }}">
+              <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">
+                <img src="{{ episode.anime.poster_image }}" alt="{{ episode.anime.title }}" class="w-full h-48 object-cover">
+                <div class="p-4">
+                  <h3 class="text-xl font-bold text-white">{{ episode.anime.title }}</h3>
+                  <p class="text-sm text-gray-300">الحلقة {{ episode.episode_number }}</p>
+                </div>
+              </div>
+            </a>
+            {% endfor %}
+          </div>
+          <!-- Pagination Controls (AJAX) -->
+          <div class="pagination flex justify-center mt-4">
+            {% if latest_episodes.has_prev %}
+              <a href="javascript:void(0);" data-url="{{ url_for(request.endpoint, anime_title=request.view_args.anime_title, latest_page=latest_episodes.prev_num) }}" class="ajax-pagination px-4 py-2 bg-gray-700 text-white rounded mr-2">Previous</a>
+            {% endif %}
+            {% for page_num in latest_episodes.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+               {% if page_num %}
+                 {% if page_num == latest_episodes.page %}
+                    <span class="px-4 py-2 bg-purple-600 text-white rounded mr-2">{{ page_num }}</span>
+                 {% else %}
+                    <a href="javascript:void(0);" data-url="{{ url_for(request.endpoint, anime_title=request.view_args.anime_title, latest_page=page_num) }}" class="ajax-pagination px-4 py-2 bg-gray-700 text-white rounded mr-2">{{ page_num }}</a>
+                 {% endif %}
+               {% else %}
+                 <span class="px-4 py-2">...</span>
+               {% endif %}
+            {% endfor %}
+            {% if latest_episodes.has_next %}
+              <a href="javascript:void(0);" data-url="{{ url_for(request.endpoint, anime_title=request.view_args.anime_title, latest_page=latest_episodes.next_num) }}" class="ajax-pagination px-4 py-2 bg-gray-700 text-white rounded">Next</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+  <!-- JavaScript for Dynamic Height, Trending Scroll Buttons, and AJAX Pagination -->
+  <script>
+    // --- Dynamic Height for Top Anime Menu & Latest Episodes Container ---
+    function adjustColumnHeights() {
+      const topAnime = document.querySelector('.top-anime-menu');
+      const latestContainer = document.querySelector('.latest-episodes-container');
+      if (topAnime && latestContainer) {
+        // Set the latest episodes container's min-height to match the top anime column's height.
+        latestContainer.style.minHeight = topAnime.offsetHeight + "px";
+      }
+    }
+    document.addEventListener("DOMContentLoaded", adjustColumnHeights);
+    window.addEventListener("resize", adjustColumnHeights);
+  
+    // --- Trending Scroll Buttons Functionality ---
+    function attachTrendingScrollListeners() {
+      const trendingContainer = document.getElementById('trending-container');
+      const scrollLeftButton = document.getElementById('scroll-left');
+      const scrollRightButton = document.getElementById('scroll-right');
+      if (trendingContainer && scrollLeftButton && scrollRightButton) {
+        scrollLeftButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          trendingContainer.scrollBy({ left: -400, behavior: 'smooth' });
+        });
+        scrollRightButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          trendingContainer.scrollBy({ left: 400, behavior: 'smooth' });
+        });
+      }
+    }
+    document.addEventListener("DOMContentLoaded", attachTrendingScrollListeners);
+  
+    // --- AJAX Pagination ---
+    function attachAjaxListeners() {
+      document.querySelectorAll('.ajax-pagination').forEach(link => {
+        link.removeEventListener('click', ajaxPaginationHandler);
+        link.addEventListener('click', ajaxPaginationHandler);
+      });
+    }
+    function ajaxPaginationHandler(event) {
+      event.preventDefault();
+      const currentScrollY = window.scrollY;
+      const url = this.getAttribute('data-url');
+      fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('common-content').innerHTML = html;
+          attachAjaxListeners();
+          adjustColumnHeights();
+          attachTrendingScrollListeners();
+          window.scrollTo(0, currentScrollY);
+        })
+        .catch(error => console.error('Error fetching pagination:', error));
+      return false;
+    }
+    attachAjaxListeners();
+  </script>
+  

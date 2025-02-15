@@ -4,7 +4,7 @@ from werkzeug.utils import secure_filename
 import requests
 from flask_login import login_user, logout_user, login_required, current_user
 from forms import LoginForm, SignupForm, AdminAnimeForm, ProfileForm
-from models import User, Anime
+from models import User, Anime, Episode
 from extensions import db
 
 bp = Blueprint('main', __name__)
@@ -15,7 +15,15 @@ def index():
     spotlights = Anime.query.order_by(db.func.random()).limit(5).all()
     # Select 8 random anime for the trending section
     trending = Anime.query.order_by(db.func.random()).limit(8).all()
-    return render_template('index.html', spotlights=spotlights, trending=trending)
+    # Get latest episodes with pagination (40 per page)
+    latest_page = request.args.get('latest_page', 1, type=int)
+    latest_episodes = Episode.query.order_by(Episode.id.desc()).paginate(page=latest_page, per_page=20, error_out=False)
+    
+    # If this is an AJAX request, return only the shared content partial
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render_template('_common_content.html', trending=trending, latest_episodes=latest_episodes)
+    
+    return render_template('index.html', spotlights=spotlights, trending=trending, latest_episodes=latest_episodes)
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -86,15 +94,20 @@ def profile():
 def watch(anime_title):
     formatted_title = anime_title.replace("_", " ")
     anime = Anime.query.filter_by(title=formatted_title).first_or_404()
-    
-    # Select 5 random anime for the spotlight slider
+    # Get episode number from query parameters; default to 1
+    ep_number = request.args.get('ep', 1, type=int)
+    selected_episode = Episode.query.filter_by(anime_id=anime.id, episode_number=ep_number).first()
+
     spotlights = Anime.query.order_by(db.func.random()).limit(5).all()
-    # Select 8 random anime for the trending section
     trending = Anime.query.order_by(db.func.random()).limit(8).all()
+    latest_page = request.args.get('latest_page', 1, type=int)
+    latest_episodes = Episode.query.order_by(Episode.id.desc()).paginate(page=latest_page, per_page=40, error_out=False)
 
-    return render_template("watch.html", anime=anime, spotlights=spotlights, trending=trending)
-
-
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render_template('_common_content.html', trending=trending, latest_episodes=latest_episodes)
+    
+    return render_template("watch.html", anime=anime, spotlights=spotlights, trending=trending, 
+                           selected_episode=selected_episode, latest_episodes=latest_episodes)
 
 @bp.route('/add_anime', methods=['GET', 'POST'])
 @login_required
@@ -187,5 +200,3 @@ def add_anime():
             else:
                 flash("Please fix the errors in the form.", "danger")
     return render_template("add_anime.html", form=form)
-
-
