@@ -89,6 +89,19 @@ class Comment(db.Model):
     def __repr__(self):
         return f"<Comment {self.id} by User {self.user_id} on Anime {self.anime_id}>"
 
+class WatchHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    anime_id = db.Column(db.Integer, db.ForeignKey('anime.id'), nullable=False)
+    episode_number = db.Column(db.Integer, nullable=False)
+    timestamp = db.Column(db.DateTime, default=db.func.now())
+
+    user = db.relationship('User', backref='watch_history')
+    anime = db.relationship('Anime', backref='watch_history')
+
+    def __repr__(self):
+        return f"<WatchHistory {self.anime.title} - Episode {self.episode_number}>"
+    
 class CommentVote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

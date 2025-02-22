@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 import requests
 from flask_login import login_user, logout_user, login_required, current_user
 from forms import LoginForm, SignupForm, AdminAnimeForm, ProfileForm, CommentForm
-from models import User, Anime, Episode, Comment, CommentVote
+from models import User, Anime, Episode, Comment, CommentVote, WatchHistory
 from extensions import db, cache
 from google.cloud import translate_v2 as translate
 from google.oauth2 import service_account
@@ -278,6 +278,15 @@ def logout():
 @login_required
 def profile():
     form = ProfileForm(obj=current_user)
+    
+    # Get watch history and comments
+    watch_history = WatchHistory.query.filter_by(user_id=current_user.id)\
+                                      .order_by(WatchHistory.timestamp.desc())\
+                                      .limit(10).all()
+    user_comments = Comment.query.filter_by(user_id=current_user.id)\
+                                 .order_by(Comment.created_at.desc())\
+                                 .limit(10).all()
+
     if form.validate_on_submit():
         # Update username and email
         current_user.username = form.username.data
@@ -294,7 +303,13 @@ def profile():
         db.session.commit()
         flash("Profile updated successfully!", "success")
         return redirect(url_for('main.profile'))
-    return render_template("profile.html", form=form)
+    
+    return render_template(
+        "profile.html",
+        form=form,
+        watch_history=watch_history,
+        user_comments=user_comments
+    )
 
 @bp.route('/watch/<anime_title>', methods=['GET', 'POST'])
 def watch(anime_title):
@@ -303,6 +318,26 @@ def watch(anime_title):
     ep_number = request.args.get('ep', 1, type=int)
     selected_episode = Episode.query.filter_by(anime_id=anime.id, episode_number=ep_number).first()
     
+    # Record watch history if user is authenticated
+    if current_user.is_authenticated:
+        existing_entry = WatchHistory.query.filter_by(
+            user_id=current_user.id,
+            anime_id=anime.id,
+            episode_number=ep_number
+        ).first()
+
+        if not existing_entry:
+            watch_entry = WatchHistory(
+                user_id=current_user.id,
+                anime_id=anime.id,
+                episode_number=ep_number
+            )
+            db.session.add(watch_entry)
+        else:
+            existing_entry.timestamp = db.func.now()
+        
+        db.session.commit()
+
     comment_form = CommentForm()
     
     if comment_form.validate_on_submit():
@@ -332,12 +367,24 @@ def watch(anime_title):
     latest_episodes = Episode.query.order_by(Episode.id.desc()).paginate(page=latest_page, per_page=40, error_out=False)
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return render_template('_common_content.html', trending=trending, latest_episodes=latest_episodes)
+        return render_template(
+            '_common_content.html',
+            trending=trending,
+            latest_episodes=latest_episodes,
+            GENRE_TRANSLATIONS=GENRE_TRANSLATIONS  # Pass GENRE_TRANSLATIONS here
+        )
     
-    return render_template("watch.html", anime=anime, spotlights=spotlights, trending=trending, 
-                           selected_episode=selected_episode, latest_episodes=latest_episodes, 
-                           comment_form=comment_form, comments=comments)
-
+    return render_template(
+        "watch.html",
+        anime=anime,
+        spotlights=spotlights,
+        trending=trending,
+        selected_episode=selected_episode,
+        latest_episodes=latest_episodes,
+        comment_form=comment_form,
+        comments=comments,
+        GENRE_TRANSLATIONS=GENRE_TRANSLATIONS  # Pass GENRE_TRANSLATIONS here
+    )
 @bp.route('/add_anime', methods=['GET', 'POST'])
 @login_required
 def add_anime():
