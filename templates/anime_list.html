@@ -8,14 +8,14 @@
     {% for anime in anime_list %}
     <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}" class="block transform transition duration-300 hover:scale-105">
       <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg">
-        <img src="{{ anime.poster_image or url_for('static', filename='images/placeholder.png') }}" alt="{{ anime.title }}" class="w-full h-64 object-cover">
+        <img src="{{ anime.poster_image or url_for('static', filename='images/placeholder.png') }}" alt="{{ anime.title_ar if anime.title_ar else anime.title }}" class="w-full h-64 object-cover">
         <div class="p-4">
-          <h2 class="text-xl font-bold text-white">{{ anime.title }}</h2>
+          <h2 class="text-xl font-bold text-white">{{ anime.title_ar if anime.title_ar else anime.title }}</h2>
           <div class="mt-2 flex justify-between text-sm text-gray-300">
-            <span>التقييم: {{ anime.rating }}</span>
+            <span>التقييم: {{ anime.rating_ar if anime.rating_ar else anime.rating }}</span>
             <span>MAL: {{ anime.mal_score }}</span>
           </div>
-          <p class="mt-1 text-sm text-gray-300">النوع: {{ anime.type }}</p>
+          <p class="mt-1 text-sm text-gray-300">النوع: {{ anime.type_ar if anime.type_ar else anime.type }}</p>
         </div>
       </div>
     </a>

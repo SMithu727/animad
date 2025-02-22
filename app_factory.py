@@ -1,6 +1,6 @@
 from flask import Flask
 from config import Config
-from extensions import db, migrate
+from extensions import db, migrate, cache  # Import the cache object
 from flask_login import LoginManager
 from flask_wtf import CSRFProtect
 import os
@@ -18,11 +18,16 @@ def create_app():
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
     
+    # Configure cache
+    app.config['CACHE_TYPE'] = 'SimpleCache'  # Use simple in-memory caching
+    app.config['CACHE_DEFAULT_TIMEOUT'] = 86400  # Cache timeout in seconds (24 hours)
+    
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
-    csrf.init_app(app)
+    csrf.init_app(app)  # Initialize CSRF protection
+    cache.init_app(app)  # Initialize the cache with the app
     
     # Import models within app context
     with app.app_context():

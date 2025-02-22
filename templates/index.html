@@ -6,29 +6,29 @@
 
 {% block content %}
   <!-- Spotlight Slider Section -->
-  <section id="spotlight-slider" class="relative h-screen w-full overflow-hidden">
+  <section id="spotlight-slider" class="relative h-screen w-full overflow-y-auto overflow-x-hidden">
     <div class="relative h-full w-full">
       <!-- Slider Container -->
-      <div id="spotlight-container" class="flex h-full w-full snap-x snap-mandatory overflow-x-hidden no-scrollbar scroll-smooth">
+      <div id="spotlight-container" class="flex h-full w-full snap-x snap-mandatory overflow-x-auto no-scrollbar scroll-smooth">
         {% for anime in spotlights %}
-        <div class="snap-center relative w-full h-screen flex-shrink-0">
+        <div class="snap-center relative w-full h-screen flex-shrink-0 overflow-y-auto">
           <!-- Background image -->
-          <img src="{{ anime.portrait_image }}" alt="{{ anime.title }}" class="absolute inset-0 w-full h-full object-cover">
+          <img src="{{ anime.portrait_image }}" alt="{{ anime.title_ar if anime.title_ar else anime.title }}" class="absolute inset-0 w-full h-full object-cover">
           <!-- Gradient overlay -->
           <div class="absolute inset-0 bg-gradient-to-l from-purple-900 to-transparent"></div>
           <!-- Spotlight content -->
           <div class="absolute right-24 top-1/2 -translate-y-1/2 text-white w-[500px]" dir="rtl">
-            <h1 class="text-5xl font-bold mb-6">{{ anime.title }}</h1>
+            <h1 class="text-5xl font-bold mb-6">{{ anime.title_ar if anime.title_ar else anime.title }}</h1>
             <div class="flex gap-4 mb-6">
               <span class="bg-purple-500 px-4 py-2 rounded">{{ anime.mal_score }} MAL</span>
-              <span class="bg-gray-600 px-4 py-2 rounded">{{ anime.rating }}</span>
-              <span class="bg-gray-600 px-4 py-2 rounded">{{ anime.type }}</span>
+              <span class="bg-gray-600 px-4 py-2 rounded">{{ anime.rating_ar if anime.rating_ar else anime.rating }}</span>
+              <span class="bg-gray-600 px-4 py-2 rounded">{{ anime.type_ar if anime.type_ar else anime.type }}</span>
             </div>
             <!-- Description with toggle -->
             <p id="description-{{ loop.index }}" class="text-lg mb-2 leading-relaxed"
-               data-full="{{ anime.description | default('No description available', true) }}"
-               data-short="{{ (anime.description | default('No description available', true)) | truncate(150, True, '...') }}">
-               {{ (anime.description | default('No description available', true)) | truncate(150, True, '...') }}
+               data-full="{{ anime.description_ar if anime.description_ar else anime.description | default('No description available', true) }}"
+               data-short="{{ (anime.description_ar if anime.description_ar else anime.description | default('No description available', true)) | truncate(150, True, '...') }}">
+               {{ (anime.description_ar if anime.description_ar else anime.description | default('No description available', true)) | truncate(150, True, '...') }}
             </p>
             <button id="toggle-description-{{ loop.index }}" onclick="toggleDescription({{ loop.index }})" class="text-purple-400 hover:text-purple-300 font-semibold text-lg">
               المزيد...
@@ -138,10 +138,6 @@
         btnEl.textContent = "المزيد...";
       }
     }
-
-    spotlightContainer.addEventListener('wheel', function(e) {
-      e.preventDefault();
-    }, { passive: false });
 
     updateDots();
   </script>

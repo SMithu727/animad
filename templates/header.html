@@ -17,6 +17,13 @@
           <a href="{{ url_for('main.add_anime') }}" class="bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
             إضافة أنمي
           </a>
+          <!-- New button for translating all anime -->
+          <form id="translate-form" action="{{ url_for('main.translate_all_anime') }}" method="POST" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold" onclick="showLoading()">
+              ترجمة كل الأنمي
+            </button>
+          </form>
         {% endif %}
         <!-- Logout Button -->
         <a href="{{ url_for('main.logout') }}" class="bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
@@ -41,6 +48,7 @@
       <div class="relative">
         <input 
           type="text" 
+          id="search-input" 
           placeholder="بحث" 
           dir="rtl" 
           class="w-96 h-14 pl-4 pr-16 border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-300 text-lg font-bold text-right rounded-none" 
@@ -49,6 +57,14 @@
           <svg class="w-7 h-7 text-black" fill="none" stroke="black" stroke-width="3" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
+        </div>
+        <!-- Search Results Container -->
+        <div id="search-results" class="absolute top-16 right-0 w-96 bg-[#2d2b44] rounded-lg shadow-lg z-50 hidden">
+          <div class="p-4">
+            <ul id="results-list" class="space-y-2">
+              <!-- Search results will be dynamically inserted here -->
+            </ul>
+          </div>
         </div>
       </div>
       <div>
@@ -98,6 +114,19 @@
   </div>
 </div>
 
+<!-- Loading spinner (hidden by default) -->
+<div id="loading-spinner" class="hidden fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50">
+  <div class="flex items-center justify-center h-full">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
+    <p class="ml-4 text-white text-xl">جار الترجمة...</p>
+  </div>
+</div>
+
+<!-- Feedback message (hidden by default) -->
+<div id="feedback-message" class="hidden fixed top-4 right-4 p-4 bg-green-500 text-white rounded-lg shadow-lg z-50">
+  تمت الترجمة بنجاح!
+</div>
+
 <!-- Scripts -->
 <script>
   // Toggle menu panel and animate the menu button flip
@@ -127,11 +156,126 @@
       header.style.backdropFilter = "none";
     }
   });
+
+  // Real-time search functionality
+  const searchInput = document.getElementById('search-input');
+  const searchResults = document.getElementById('search-results');
+  const resultsList = document.getElementById('results-list');
+
+  const fetchSearchResults = async (query) => {
+    if (query.length === 0) {
+      searchResults.classList.add('hidden');
+      return;
+    }
+
+    const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+    const results = await response.json();
+
+    resultsList.innerHTML = '';
+
+    if (results.length > 0) {
+      results.forEach(anime => {
+        const listItem = document.createElement('li');
+        listItem.className = 'p-2 hover:bg-[#3a3757] rounded-lg transition-colors';
+        listItem.innerHTML = `
+          <a href="${anime.url}" class="flex items-center space-x-4">
+            <img src="${anime.poster_image}" alt="${anime.title}" class="w-12 h-16 object-cover rounded-lg">
+            <div>
+              <p class="text-white font-bold">${anime.title}</p>
+              <p class="text-gray-400 text-sm">${anime.japanese_title}</p>
+            </div>
+          </a>
+        `;
+        resultsList.appendChild(listItem);
+      });
+      searchResults.classList.remove('hidden');
+    } else {
+      resultsList.innerHTML = '<li class="text-white text-center p-2">لا توجد نتائج</li>';
+      searchResults.classList.remove('hidden');
+    }
+  };
+
+  searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.trim();
+    fetchSearchResults(query);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!searchResults.contains(e.target) && !searchInput.contains(e.target)) {
+      searchResults.classList.add('hidden');
+    }
+  });
+
+  // Show loading spinner and handle translation form submission
+  function showLoading() {
+    // Show the loading spinner
+    document.getElementById('loading-spinner').classList.remove('hidden');
+
+    // Submit the form
+    fetch("{{ url_for('main.translate_all_anime') }}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+      }
+    })
+    .then(response => {
+      if (response.redirected) {
+        window.location.href = response.url; // Redirect to the homepage
+      }
+    })
+    .catch(error => {
+      console.error("Error:", error);
+    })
+    .finally(() => {
+      // Hide the loading spinner
+      document.getElementById('loading-spinner').classList.add('hidden');
+      // Show the feedback message
+      document.getElementById('feedback-message').classList.remove('hidden');
+      setTimeout(() => {
+        document.getElementById('feedback-message').classList.add('hidden');
+      }, 3000); // Hide the feedback message after 3 seconds
+    });
+  }
 </script>
 
 <!-- Additional CSS for flip animation on the menu button -->
 <style>
   .rotate-y-180 {
     transform: rotateY(180deg);
+  }
+  #search-results {
+    max-height: 400px;
+    overflow-y: auto;
+    width: 100%;
+    border: 1px solid #3a3757;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  #search-results::-webkit-scrollbar {
+    width: 8px;
+  }
+  #search-results::-webkit-scrollbar-track {
+    background: #2d2b44;
+  }
+  #search-results::-webkit-scrollbar-thumb {
+    background: #3a3757;
+    border-radius: 4px;
+  }
+  #results-list li {
+    padding: 8px;
+    transition: background-color 0.2s ease;
+  }
+  #results-list li:hover {
+    background-color: #3a3757;
+  }
+
+  /* Loading spinner animation */
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .animate-spin {
+    animation: spin 1s linear infinite;
   }
 </style>

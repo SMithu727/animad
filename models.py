@@ -18,26 +18,33 @@ class User(UserMixin, db.Model):
 class Anime(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     mal_code = db.Column(db.String(20), nullable=True)
-    title = db.Column(db.String(255), nullable=False)
+    title = db.Column(db.String(255), nullable=False)  # Keep English title
     rating = db.Column(db.String(20))
+    rating_ar = db.Column(db.String(50), nullable=True)  # Translated rating
     quality = db.Column(db.String(10))
     episode_count = db.Column(db.Integer)
     type = db.Column(db.String(50))
+    type_ar = db.Column(db.String(50), nullable=True)  # Translated type
     duration = db.Column(db.String(20))
+    duration_ar = db.Column(db.String(50), nullable=True)  # Translated duration
     description = db.Column(db.Text)
+    description_ar = db.Column(db.Text, nullable=True)  # Translated description
     japanese_title = db.Column(db.String(255))
-    synonyms = db.Column(db.String(255))
+    synonyms = db.Column(db.String(255))  # Keep English synonyms
     aired = db.Column(db.String(255))
+    aired_ar = db.Column(db.String(255), nullable=True)  # Translated aired
     premiered = db.Column(db.String(50))
+    premiered_ar = db.Column(db.String(50), nullable=True)  # Translated premiered
     status = db.Column(db.String(50))
+    status_ar = db.Column(db.String(50), nullable=True)  # Translated status
     mal_score = db.Column(db.Float)
     genres = db.Column(db.String(255))
-    studios = db.Column(db.String(255))
-    producers = db.Column(db.String(255))
+    genres_ar = db.Column(db.String(255), nullable=True)  # Translated genres
+    studios = db.Column(db.String(255))  # Keep English studios
+    producers = db.Column(db.String(255))  # Keep English producers
     poster_image = db.Column(db.String(255))
     portrait_image = db.Column(db.String(255))
     episodes = db.relationship('Episode', backref='anime', lazy=True)
-    # Relationship to comments
     comments = db.relationship('Comment', backref='anime', lazy=True)
 
     def __repr__(self):

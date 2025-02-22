@@ -38,7 +38,7 @@
 </style>
 {% endblock %}
 
-{% block title %}مشاهدة {{ anime.title }}{% endblock %}
+{% block title %}مشاهدة {{ anime.title_ar if anime.title_ar else anime.title }}{% endblock %}
 
 {% block main_class %}text-white min-h-screen{% endblock %}
 
@@ -57,16 +57,16 @@
           <!-- Left Column: Anime Info -->
           <div class="w-full lg:w-1/4 xl:w-1/5 space-y-6">
             <div class="bg-gradient-to-br from-purple-900/50 to-gray-800 p-6 rounded-2xl shadow-2xl">
-              <img src="{{ anime.poster_image }}" alt="{{ anime.title }}" class="w-full h-auto rounded-xl shadow-lg">
+              <img src="{{ anime.poster_image }}" alt="{{ anime.title_ar if anime.title_ar else anime.title }}" class="w-full h-auto rounded-xl shadow-lg">
               <div class="mt-6 space-y-4">
                 <div class="flex flex-wrap gap-3">
                   <span class="bg-purple-600 px-4 py-2 rounded-full text-sm font-bold">{{ anime.mal_score }} MAL</span>
-                  <span class="bg-gray-700 px-4 py-2 rounded-full text-sm">{{ anime.rating }}</span>
-                  <span class="bg-gray-700 px-4 py-2 rounded-full text-sm">{{ anime.type }}</span>
+                  <span class="bg-gray-700 px-4 py-2 rounded-full text-sm">{{ anime.rating_ar if anime.rating_ar else anime.rating }}</span>
+                  <span class="bg-gray-700 px-4 py-2 rounded-full text-sm">{{ anime.type_ar if anime.type_ar else anime.type }}</span>
                 </div>
-                <h2 class="text-2xl font-bold text-purple-400">{{ anime.title }}</h2>
+                <h2 class="text-2xl font-bold text-purple-400">{{ anime.title_ar if anime.title_ar else anime.title }}</h2>
                 <p id="anime-description" class="text-gray-300 text-lg leading-relaxed line-clamp-4 transition-all duration-300">
-                  {{ anime.description }}
+                  {{ anime.description_ar if anime.description_ar else anime.description }}
                 </p>
                 <button id="toggle-description" class="text-purple-400 hover:text-purple-300 font-semibold text-lg">
                   قراءة المزيد →

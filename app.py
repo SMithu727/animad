@@ -1,3 +1,4 @@
+import html
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify
 import os
 from werkzeug.utils import secure_filename
@@ -5,10 +6,188 @@ import requests
 from flask_login import login_user, logout_user, login_required, current_user
 from forms import LoginForm, SignupForm, AdminAnimeForm, ProfileForm, CommentForm
 from models import User, Anime, Episode, Comment, CommentVote
-from extensions import db
+from extensions import db, cache
+from google.cloud import translate_v2 as translate
+from google.oauth2 import service_account
+from dateparser import parse  # For date translation
 
+# Initialize the Flask Blueprint
 bp = Blueprint('main', __name__)
 
+# Load the JSON key file for Google Cloud Translation API
+credentials = service_account.Credentials.from_service_account_file(
+    "C:/Users/xgaem/Downloads/Animad - Copy/credentials/innate-sunset-451719-c5-08a2d0e73f47.json"
+)
+
+# Initialize Google Cloud Translation client
+translate_client = translate.Client(credentials=credentials)
+
+# Translation dictionaries
+STATUS_TRANSLATIONS = {
+    "Finished Airing": "مكتمل",
+    "Currently Airing": "يعرض الآن",
+    "Not yet aired": "لم يعرض بعد",
+    "Cancelled": "ملغي"
+}
+
+GENRE_TRANSLATIONS = {
+    "Action": "أكشن",
+    "Adventure": "مغامرات",
+    "Fantasy": "فانتازيا",
+    "Sports": "رياضة",
+    "Comedy": "كوميديا",
+    "Supernatural": "خوارق",
+    "Romance": "رومانسية",
+    "Ecchi": "إيتشي",
+    "Drama": "دراما",
+    "Horror": "رعب",
+    "Mystery": "غموض",
+    "Suspense": "تشويق",
+    "Slice of Life": "شريحة من الحياة",
+    "Sci-Fi": "خيال علمي",
+    "Award Winning": "حائز على جوائز"
+}
+
+RATING_TRANSLATIONS = {
+    "R - 17+ (violence & profanity)": "R - 17+ (عنف ولغة صريحة)",
+    "PG-13 - Teens 13 or older": "PG-13 - المراهقون 13 فما فوق",
+    "R+ - Mild Nudity": "R+ - عري جزئي",
+    "G - All Ages": "G - جميع الأعمار"
+}
+
+TYPE_TRANSLATIONS = {
+    "TV": "مسلسل تلفزيوني",
+    "Movie": "فيلم",
+    "OVA": "أوفا",
+    "ONA": "أونا",
+    "Special": "خاص"
+}
+
+PREMIERED_TRANSLATIONS = {
+    "summer": "الصيف",
+    "winter": "الشتاء",
+    "fall": "الخريف",
+    "spring": "الربيع"
+}
+
+# Helper functions
+def translate_duration(duration):
+    if "per ep" in duration:
+        return duration.replace("min", "دقيقة").replace("per ep", "لكل حلقة")
+    if "hr" in duration and "min" in duration:
+        return duration.replace("hr", "ساعة").replace("min", "دقيقة")
+    if "hr" in duration:
+        return duration.replace("hr", "ساعة")
+    return duration.replace("min", "دقيقة")
+
+def translate_aired(aired):
+    if not aired:
+        return ""
+    parts = aired.split(" to ")
+    translated_parts = []
+    for part in parts:
+        if part == "?":
+            translated_parts.append("؟")
+            continue
+        try:
+            date_obj = parse(part)
+            if date_obj:
+                formatted_date = date_obj.strftime("%d %B %Y").lstrip("0")
+                month_translations = {
+                    'January': 'يناير', 'February': 'فبراير', 'March': 'مارس',
+                    'April': 'أبريل', 'May': 'مايو', 'June': 'يونيو',
+                    'July': 'يوليو', 'August': 'أغسطس', 'September': 'سبتمبر',
+                    'October': 'أكتوبر', 'November': 'نوفمبر', 'December': 'ديسمبر'
+                }
+                for eng, ar in month_translations.items():
+                    formatted_date = formatted_date.replace(eng, ar)
+                translated_parts.append(formatted_date)
+            else:
+                translated_parts.append(part)
+        except:
+            translated_parts.append(part)
+    return " إلى ".join(translated_parts)
+
+def translate_text(text, source_lang='en', target_lang='ar'):
+    if not text:
+        return text
+    try:
+        result = translate_client.translate(text, target_language=target_lang)
+        translated_text = result['translatedText']
+        # Decode HTML entities in the translated text
+        decoded_text = html.unescape(translated_text)
+        return decoded_text
+    except Exception as e:
+        print(f"Translation error: {e}")
+        return text  # Fallback to the original text
+
+# Route to translate all anime
+@bp.route('/translate_all_anime', methods=['POST'])
+@login_required
+def translate_all_anime():
+    if current_user.role != 'admin':
+        flash("You do not have permission to access this page.", "danger")
+        return redirect(url_for('main.index'))
+
+    all_anime = Anime.query.all()
+    batch_size = 10
+    
+    for i, anime in enumerate(all_anime):
+        try:
+            # Translate status
+            if anime.status and not anime.status_ar:
+                anime.status_ar = STATUS_TRANSLATIONS.get(anime.status, translate_text(anime.status, target_lang='ar'))
+
+            # Translate genres
+            if anime.genres and not anime.genres_ar:
+                translated_genres = []
+                for genre in anime.genres.split(', '):
+                    translated = GENRE_TRANSLATIONS.get(genre.strip(), genre.strip())
+                    translated_genres.append(translated)
+                anime.genres_ar = ', '.join(translated_genres)
+
+            # Translate rating
+            if anime.rating and not anime.rating_ar:
+                anime.rating_ar = RATING_TRANSLATIONS.get(anime.rating, translate_text(anime.rating, target_lang='ar'))
+
+            # Translate type
+            if anime.type and not anime.type_ar:
+                anime.type_ar = TYPE_TRANSLATIONS.get(anime.type, translate_text(anime.type, target_lang='ar'))
+
+            # Translate duration
+            if anime.duration and not anime.duration_ar:
+                anime.duration_ar = translate_duration(anime.duration)
+
+            # Translate aired dates
+            if anime.aired and not anime.aired_ar:
+                anime.aired_ar = translate_aired(anime.aired)
+
+            # Translate premiered (seasons)
+            if anime.premiered and not anime.premiered_ar:
+                anime.premiered_ar = PREMIERED_TRANSLATIONS.get(anime.premiered, translate_text(anime.premiered, target_lang='ar'))
+
+            # Translate description with API (chunked)
+            if not anime.description_ar and anime.description:
+                chunks = [anime.description[i:i+450] for i in range(0, len(anime.description), 450)]
+                translated_chunks = []
+                for chunk in chunks:
+                    translated = translate_text(chunk, target_lang='ar')
+                    translated_chunks.append(translated)
+                anime.description_ar = ' '.join(translated_chunks)
+
+        except Exception as e:
+            print(f"Error translating anime ID {anime.id}: {str(e)}")
+            continue
+
+        if i % batch_size == 0:
+            db.session.commit()
+
+    db.session.commit()
+    flash("Translation completed successfully!", "success")
+    return redirect(url_for('main.index'))
+
+
+# Other routes
 @bp.route('/')
 def index():
     # Select 5 random anime for the spotlight slider
@@ -139,9 +318,9 @@ def add_anime():
     if current_user.role not in ['admin', 'mod']:
         flash("You do not have permission to access this page.", "danger")
         return redirect(url_for('main.index'))
-    
+
     form = AdminAnimeForm()
-    
+
     if request.method == 'POST':
         # If the "Fetch from MAL" button was pressed:
         if "fetch" in request.form:
@@ -183,7 +362,7 @@ def add_anime():
             else:
                 flash("Error fetching data from MAL API.", "danger")
             return render_template("add_anime.html", form=form)
-        
+
         # If the "Add Anime" button was pressed:
         elif "submit" in request.form:
             if form.validate():
@@ -230,6 +409,30 @@ def all_anime():
     anime_list = Anime.query.order_by(Anime.title).all()
     return render_template("anime_list.html", anime_list=anime_list)
 
+@bp.route('/search')
+def search():
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify([])  # Return empty list if no query
+    
+    search_term = f"%{query}%"
+    # Search in title, japanese_title, or synonyms
+    results = Anime.query.filter(
+        (Anime.title.ilike(search_term)) |
+        (Anime.japanese_title.ilike(search_term)) |
+        (Anime.synonyms.ilike(search_term))
+    ).order_by(Anime.title).limit(10).all()  # Limit results to 10 for performance
+    
+    # Format results as a list of dictionaries
+    results_data = [{
+        "id": anime.id,
+        "title": anime.title,
+        "japanese_title": anime.japanese_title,
+        "poster_image": anime.poster_image,
+        "url": url_for('main.watch', anime_title=anime.title.replace(" ", "_"))
+    } for anime in results]
+    
+    return jsonify(results_data)
 
 # ---------------------- New Endpoints for Comment Voting ---------------------- #
 
