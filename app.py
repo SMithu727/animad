@@ -33,19 +33,23 @@ STATUS_TRANSLATIONS = {
 GENRE_TRANSLATIONS = {
     "Action": "أكشن",
     "Adventure": "مغامرات",
-    "Fantasy": "فانتازيا",
-    "Sports": "رياضة",
+    "Avant Garde": "طليعية",
+    "Award Winning": "حائز على جوائز",
     "Comedy": "كوميديا",
-    "Supernatural": "خوارق",
-    "Romance": "رومانسية",
-    "Ecchi": "إيتشي",
     "Drama": "دراما",
+    "Fantasy": "فانتازيا",
+    "Gourmet": "ذواقة",
     "Horror": "رعب",
     "Mystery": "غموض",
-    "Suspense": "تشويق",
-    "Slice of Life": "شريحة من الحياة",
+    "Romance": "رومانسية",
     "Sci-Fi": "خيال علمي",
-    "Award Winning": "حائز على جوائز"
+    "Slice of Life": "شريحة من الحياة",
+    "Sports": "رياضة",
+    "Supernatural": "خوارق",
+    "Suspense": "تشويق",
+    "Ecchi": "إيتشي",
+    "Erotica": "إيروتيكا",
+    "Hentai": "هنتاي"
 }
 
 RATING_TRANSLATIONS = {
@@ -188,6 +192,27 @@ def translate_all_anime():
 
 
 # Other routes
+@bp.route('/genre/<genre_name>')
+def genre(genre_name):
+    # Find the English genre name from Arabic translation
+    reverse_genre_translations = {v: k for k, v in GENRE_TRANSLATIONS.items()}
+    english_genre = reverse_genre_translations.get(genre_name, genre_name)
+    
+    # Get page number from query parameters
+    page = request.args.get('page', 1, type=int)
+    
+    # Search for anime with this genre (case-insensitive)
+    genre_filter = f"%{english_genre}%"
+    anime_list = Anime.query.filter(Anime.genres.ilike(genre_filter)).paginate(page=page, per_page=20, error_out=False)
+    
+    # Get Arabic genre name
+    arabic_genre = GENRE_TRANSLATIONS.get(english_genre, english_genre)
+    
+    return render_template('genre.html', 
+                         anime_list=anime_list,
+                         genre_name=arabic_genre,
+                         GENRE_TRANSLATIONS=GENRE_TRANSLATIONS)
+    
 @bp.route('/')
 def index():
     # Select 5 random anime for the spotlight slider
@@ -197,12 +222,14 @@ def index():
     # Get latest episodes with pagination (20 per page)
     latest_page = request.args.get('latest_page', 1, type=int)
     latest_episodes = Episode.query.order_by(Episode.id.desc()).paginate(page=latest_page, per_page=20, error_out=False)
-    
-    # If this is an AJAX request, return only the shared content partial
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return render_template('_common_content.html', trending=trending, latest_episodes=latest_episodes)
-    
-    return render_template('index.html', spotlights=spotlights, trending=trending, latest_episodes=latest_episodes)
+
+    return render_template(
+        'index.html',
+        spotlights=spotlights,
+        trending=trending,
+        latest_episodes=latest_episodes,
+        GENRE_TRANSLATIONS=GENRE_TRANSLATIONS  # Pass GENRE_TRANSLATIONS to the template
+    )
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():

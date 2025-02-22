@@ -39,20 +39,17 @@
     <div class="flex flex-col lg:flex-row gap-8 items-stretch">
       <aside class="lg:w-1/4 space-y-8">
         <!-- Genres Menu -->
-        <div class="bg-gradient-to-r from-[#1a1a2e] to-[#0d0d1d] p-6 rounded-lg shadow-lg">
-          <h3 class="text-xl font-bold text-white mb-4">التصنيفات</h3>
-          <div class="grid grid-cols-3 gap-4">
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">أكشن</a>
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">رومانسي</a>
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">كوميدي</a>
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">دراما</a>
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">رعب</a>
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">خيال علمي</a>
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">إيسيكاي</a>
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">مدرسي</a>
-            <a href="#" class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">مغامرات</a>
-          </div>
-        </div>
+<div class="bg-gradient-to-r from-[#1a1a2e] to-[#0d0d1d] p-6 rounded-lg shadow-lg">
+  <h3 class="text-xl font-bold text-white mb-4">التصنيفات</h3>
+  <div class="grid grid-cols-3 gap-4">
+    {% for eng_genre, ar_genre in GENRE_TRANSLATIONS.items() %}
+    <a href="{{ url_for('main.genre', genre_name=eng_genre) }}" 
+       class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">
+      {{ ar_genre }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
         <!-- Top Anime Menu (Smaller Posters & Compact Layout) -->
         <div class="top-anime-menu bg-gradient-to-r from-[#1a1a2e] to-[#0d0d1d] p-6 rounded-lg shadow-lg overflow-y-auto">
           <h3 class="text-xl font-bold text-white mb-4">أفضل الأنميات</h3>
