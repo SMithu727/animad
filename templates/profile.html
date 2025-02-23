@@ -2,12 +2,10 @@
 
 {% block title %}الملف الشخصي{% endblock %}
 
-{% block main_class %}bg-gradient-to-b from-[#1a1a2e] to-[#0d0d1d] min-h-screen{% endblock %}
+{% block main_class %}pt-[143px]{% endblock %}
 
 {% block content %}
-  {% include 'header.html' %}
-
-  <main class="container mx-auto px-4 pt-32 pb-12" dir="rtl">
+  <main class="container mx-auto px-4 pb-12" dir="rtl">
     <!-- Profile Update Card -->
     <div class="max-w-2xl mx-auto mb-16">
       <div class="bg-[#2d2b44] rounded-2xl shadow-xl p-8">
@@ -143,7 +141,7 @@
 {% block extra_scripts %}
 <script>
   // Profile picture preview
-  document.getElementById('picture').addEventListener('change', function(e) {
+  document.getElementById('picture')?.addEventListener('change', function(e) {
     const reader = new FileReader();
     reader.onload = function() {
       document.getElementById('profile-preview').src = reader.result;

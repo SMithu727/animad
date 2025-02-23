@@ -43,8 +43,10 @@
         </a>
       {% endif %}
     </div>
-    <!-- Right Column: Search Bar, Logo, All Anime Button, and Menu Button -->
+
+    <!-- Right Column: Search Bar, Logo, Buttons, and Menu Button -->
     <div class="flex items-center space-x-6">
+      <!-- Search Bar -->
       <div class="relative">
         <input 
           type="text" 
@@ -67,19 +69,27 @@
           </div>
         </div>
       </div>
+
+      <!-- Logo -->
       <div>
         <a href="{{ url_for('main.index') }}">
           <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="h-20" onerror="this.onerror=null;this.src='https://via.placeholder.com/120x60?text=Logo';">
         </a>
       </div>
-      <!-- All Anime List Button (visible on larger screens) -->
-      <div class="hidden sm:block">
+
+      <!-- Navigation Buttons (Visible on Larger Screens) -->
+      <div class="hidden sm:flex space-x-4">
         <a href="{{ url_for('main.all_anime') }}" class="bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
           كل الأنمي
         </a>
+        <!-- News Button -->
+        <a href="{{ url_for('main.news') }}" class="bg-white text-[#2d2b44] px-8 py-4 rounded-lg shadow hover:bg-gray-100 focus:outline-none text-xl font-bold">
+          الأخبار
+        </a>
       </div>
+
+      <!-- Menu Button -->
       <div class="h-20 flex items-center" style="perspective: 1000px;">
-        <!-- Menu Button with flip animation -->
         <button id="menu-button" class="text-white focus:outline-none transform transition-transform duration-300" style="transform-style: preserve-3d;">
           <svg class="w-14 h-14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
             <path class="menu-icon" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -90,7 +100,7 @@
   </div>
 </header>
 
-<!-- Menu Panel: Overlays the page, aligned to the right, starting under the header (144px) -->
+<!-- Menu Panel -->
 <div id="menu-panel" class="fixed top-[144px] right-0 w-80 h-[calc(100%-144px)] bg-gradient-to-b from-[#1a1a2e] to-[#0d0d1d] bg-opacity-95 backdrop-blur-lg shadow-2xl transform translate-x-full transition-transform duration-300 z-20" dir="rtl">
   <div class="p-6">
     <div class="flex items-center justify-between">
@@ -102,19 +112,20 @@
       </button>
     </div>
     <ul class="space-y-4 text-white text-right">
-      <li class="py-2 border-b border-gray-700">عن الموقع</li>
-      <li class="py-2 border-b border-gray-700">الأخبار</li>
-      <li class="py-2 border-b border-gray-700">التصنيفات</li>
-      <!-- All Anime List Link -->
       <li class="py-2 border-b border-gray-700">
-        <a href="{{ url_for('main.all_anime') }}">كل الأنمي</a>
+        <a href="{{ url_for('main.news') }}" class="block">الأخبار</a>
       </li>
+      <li class="py-2 border-b border-gray-700">
+        <a href="{{ url_for('main.all_anime') }}" class="block">كل الأنمي</a>
+      </li>
+      <li class="py-2 border-b border-gray-700">عن الموقع</li>
+      <li class="py-2 border-b border-gray-700">التصنيفات</li>
       <li class="py-2">اتصل بنا</li>
     </ul>
   </div>
 </div>
 
-<!-- Loading spinner (hidden by default) -->
+<!-- Loading Spinner -->
 <div id="loading-spinner" class="hidden fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50">
   <div class="flex items-center justify-center h-full">
     <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
@@ -122,7 +133,7 @@
   </div>
 </div>
 
-<!-- Feedback message (hidden by default) -->
+<!-- Feedback Message -->
 <div id="feedback-message" class="hidden fixed top-4 right-4 p-4 bg-green-500 text-white rounded-lg shadow-lg z-50">
   تمت الترجمة بنجاح!
 </div>

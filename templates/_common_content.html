@@ -1,66 +1,86 @@
-<div id="common-content">
+<div id="common-content" class="space-y-16">
   <!-- Trending Section -->
   <section class="px-8 py-8" dir="rtl">
-    <h2 class="text-4xl font-bold text-purple-900 mb-6 text-right">الرائجة</h2>
+    <h2 class="text-3xl font-bold text-purple-400 mb-6 text-right border-b-2 border-purple-600 pb-4">
+      <i class="fas fa-fire ml-2"></i>الرائجة
+    </h2>
     <div class="relative">
       <div id="trending-container" class="flex gap-8 overflow-x-auto pb-4 px-8 no-scrollbar scroll-smooth">
         {% for anime in trending %}
         <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}" class="block">
-          <div class="w-[400px] relative group flex-shrink-0 transform transition duration-300 hover:scale-105 fade-in" style="animation-delay: {{ (loop.index0)*0.1 }}s;">
-            <img src="{{ anime.poster_image }}" alt="{{ anime.title_ar if anime.title_ar else anime.title }}" class="w-full h-[600px] object-cover rounded-lg">
-            <div class="absolute top-2 left-2 bg-purple-900 text-white font-bold rounded-full w-10 h-10 flex items-center justify-center">{{ loop.index }}</div>
-            <div class="mt-2 text-center font-bold text-white">{{ anime.title_ar if anime.title_ar else anime.title }}</div>
-            <div class="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
-              <div class="text-2xl font-bold">{{ anime.title_ar if anime.title_ar else anime.title }}</div>
-              <div class="mt-1 text-lg">التقييم: {{ anime.rating_ar if anime.rating_ar else anime.rating }}</div>
-              <div class="mt-1 text-lg">MAL: {{ anime.mal_score }}</div>
-              <div class="mt-1 text-lg">النوع: {{ anime.type_ar if anime.type_ar else anime.type }}</div>
+          <div class="w-[400px] relative group flex-shrink-0 transform transition duration-300 hover:scale-105 hover:shadow-xl fade-in" 
+               style="animation-delay: {{ (loop.index0)*0.1 }}s;">
+            <div class="bg-[#2d2b44] rounded-2xl overflow-hidden shadow-lg">
+              <img src="{{ anime.poster_image }}" alt="{{ anime.title_ar if anime.title_ar else anime.title }}" 
+                   class="w-full h-[600px] object-cover transform transition duration-300 group-hover:opacity-50">
+              <div class="absolute top-4 left-4 bg-purple-600 text-white font-bold rounded-full w-12 h-12 flex items-center justify-center shadow-lg">
+                {{ loop.index }}
+              </div>
+              <div class="absolute inset-0 bg-gradient-to-t from-[#2d2b44] via-transparent to-transparent"></div>
+              <div class="absolute bottom-0 left-0 right-0 p-6">
+                <h3 class="text-xl font-bold text-white mb-2">{{ anime.title_ar if anime.title_ar else anime.title }}</h3>
+                <div class="flex items-center space-x-2 text-purple-400">
+                  <i class="fas fa-star"></i>
+                  <span>{{ anime.mal_score }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </a>
         {% endfor %}
       </div>
-      <!-- Trending Scroll Buttons -->
-      <button id="scroll-left" class="absolute left-2 top-1/2 z-50 transform -translate-y-1/2 bg-gray-800 hover:bg-gray-700 text-white w-14 h-14 rounded-full flex items-center justify-center opacity-70 transition-transform duration-300 hover:scale-110">
-        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <!-- Updated Scroll Buttons (Same as index.html) -->
+      <button id="scroll-left" class="absolute left-2 top-1/2 z-50 transform -translate-y-1/2 bg-gray-800 hover:bg-gray-700 text-white w-12 h-12 rounded-full flex items-center justify-center opacity-80 transition-transform duration-300 hover:scale-110">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
-      <button id="scroll-right" class="absolute right-2 top-1/2 z-50 transform -translate-y-1/2 bg-gray-800 hover:bg-gray-700 text-white w-14 h-14 rounded-full flex items-center justify-center opacity-70 transition-transform duration-300 hover:scale-110">
-        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <button id="scroll-right" class="absolute right-2 top-1/2 z-50 transform -translate-y-1/2 bg-gray-800 hover:bg-gray-700 text-white w-12 h-12 rounded-full flex items-center justify-center opacity-80 transition-transform duration-300 hover:scale-110">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
         </svg>
       </button>
     </div>
   </section>
-  
+
   <!-- Latest Episodes Section with Pagination -->
   <section class="px-8 py-8" dir="rtl">
     <div class="flex flex-col lg:flex-row gap-8 items-stretch">
       <aside class="lg:w-1/4 space-y-8">
         <!-- Genres Menu -->
-<div class="bg-gradient-to-r from-[#1a1a2e] to-[#0d0d1d] p-6 rounded-lg shadow-lg">
-  <h3 class="text-xl font-bold text-white mb-4">التصنيفات</h3>
-  <div class="grid grid-cols-3 gap-4">
-    {% for eng_genre, ar_genre in GENRE_TRANSLATIONS.items() %}
-    <a href="{{ url_for('main.genre', genre_name=eng_genre) }}" 
-       class="bg-gray-700 text-white text-center py-3 rounded hover:bg-gray-600 transition">
-      {{ ar_genre }}
-    </a>
-    {% endfor %}
-  </div>
-</div>
-        <!-- Top Anime Menu (Smaller Posters & Compact Layout) -->
-        <div class="top-anime-menu bg-gradient-to-r from-[#1a1a2e] to-[#0d0d1d] p-6 rounded-lg shadow-lg overflow-y-auto">
-          <h3 class="text-xl font-bold text-white mb-4">أفضل الأنميات</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-[#2d2b44] p-6 rounded-2xl shadow-xl">
+          <h3 class="text-xl font-bold text-purple-400 mb-4 border-b-2 border-purple-600 pb-2">
+            <i class="fas fa-tags ml-2"></i>التصنيفات
+          </h3>
+          <div class="grid grid-cols-2 gap-3">
+            {% for eng_genre, ar_genre in GENRE_TRANSLATIONS.items() %}
+            <a href="{{ url_for('main.genre', genre_name=eng_genre) }}" 
+               class="bg-[#1a1a2e] text-white text-sm text-center py-2 rounded-xl hover:bg-purple-600 transition-colors duration-300">
+              {{ ar_genre }}
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Top Anime Menu -->
+        <div class="bg-[#2d2b44] p-6 rounded-2xl shadow-xl">
+          <h3 class="text-xl font-bold text-purple-400 mb-4 border-b-2 border-purple-600 pb-2">
+            <i class="fas fa-trophy ml-2"></i>أفضل الأنميات
+          </h3>
+          <div class="space-y-4">
             {% for anime in trending %}
-            <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}" class="block transform transition duration-300 hover:scale-105 hover:shadow-lg">
-              <div class="flex items-center space-x-4 bg-gray-800 p-3 rounded-lg shadow-md">
-                <img src="{{ anime.poster_image }}" alt="{{ anime.title_ar if anime.title_ar else anime.title }}" class="w-16 h-24 object-cover rounded-md">
-                <div>
-                  <h3 class="text-lg font-semibold text-white">{{ anime.title_ar if anime.title_ar else anime.title }}</h3>
-                  <p class="text-sm text-gray-400">التقييم: {{ anime.rating_ar if anime.rating_ar else anime.rating }}</p>
+            <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}" 
+               class="flex items-center bg-[#1a1a2e] hover:bg-purple-600/30 p-3 rounded-xl transition-all duration-300 group">
+              <img src="{{ anime.poster_image }}" 
+                   alt="{{ anime.title_ar if anime.title_ar else anime.title }}" 
+                   class="w-16 h-20 object-cover rounded-lg shadow-md">
+              <div class="mr-4">
+                <h3 class="text-sm font-semibold text-white group-hover:text-purple-400">
+                  {{ anime.title_ar if anime.title_ar else anime.title }}
+                </h3>
+                <div class="flex items-center mt-1">
+                  <span class="text-xs bg-purple-600 px-2 py-1 rounded-full">{{ anime.mal_score }}</span>
+                  <span class="text-xs text-white ml-2">{{ anime.type_ar if anime.type_ar else anime.type }}</span>
                 </div>
               </div>
             </a>
@@ -68,39 +88,64 @@
           </div>
         </div>
       </aside>
+
+      <!-- Episodes Grid -->
       <div class="lg:w-3/4 latest-episodes-container" id="latest-episodes-container">
-        <h2 class="text-4xl font-bold text-purple-900 mb-6 text-right">آخر الحلقات</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8" id="latest-episodes-grid">
+        <h2 class="text-3xl font-bold text-purple-400 mb-6 text-right border-b-2 border-purple-600 pb-4">
+          <i class="fas fa-history ml-2"></i>آخر الحلقات
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="latest-episodes-grid">
           {% for episode in latest_episodes.items %}
-          <a href="{{ url_for('main.watch', anime_title=episode.anime.title.replace(' ', '_'), ep=episode.episode_number, latest_page=latest_episodes.page) }}">
-            <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition duration-300 hover:scale-105">
-              <img src="{{ episode.anime.poster_image }}" alt="{{ episode.anime.title_ar if episode.anime.title_ar else episode.anime.title }}" class="w-full h-48 object-cover">
-              <div class="p-4">
-                <h3 class="text-xl font-bold text-white">{{ episode.anime.title_ar if episode.anime.title_ar else episode.anime.title }}</h3>
-                <p class="text-sm text-gray-300">الحلقة {{ episode.episode_number }}</p>
+          <a href="{{ url_for('main.watch', anime_title=episode.anime.title.replace(' ', '_'), ep=episode.episode_number, latest_page=latest_episodes.page) }}"
+             class="bg-[#2d2b44] rounded-2xl overflow-hidden shadow-xl transform transition duration-300 hover:scale-[1.02] group">
+            <div class="relative">
+              <img src="{{ episode.anime.poster_image }}" 
+                   alt="{{ episode.anime.title_ar if episode.anime.title_ar else episode.anime.title }}" 
+                   class="w-full h-48 object-cover">
+              <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#2d2b44] p-4">
+                <h3 class="text-lg font-bold text-white">{{ episode.anime.title_ar if episode.anime.title_ar else episode.anime.title }}</h3>
+                <div class="flex items-center justify-between mt-2">
+                  <span class="text-sm text-purple-400">الحلقة {{ episode.episode_number }}</span>
+                  <span class="text-xs text-white bg-purple-600 px-2 py-1 rounded-full">
+                    {{ episode.anime.type_ar if episode.anime.type_ar else episode.anime.type }}
+                  </span>
+                </div>
               </div>
             </div>
           </a>
           {% endfor %}
         </div>
-        <!-- Pagination Controls (AJAX) -->
-        <div class="pagination flex justify-center mt-4">
+
+        <!-- Updated Pagination with Arabic Labels -->
+        <div class="pagination flex justify-center mt-8 space-x-2">
           {% if latest_episodes.has_prev %}
-            <a href="javascript:void(0);" data-url="{{ url_for(request.endpoint, anime_title=request.view_args.anime_title, latest_page=latest_episodes.prev_num) }}" class="ajax-pagination px-4 py-2 bg-gray-700 text-white rounded mr-2">Previous</a>
+            <a href="javascript:void(0);" 
+               data-url="{{ url_for('main.index', latest_page=latest_episodes.prev_num) }}" 
+               class="ajax-pagination px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors duration-300">
+              السابق
+            </a>
           {% endif %}
           {% for page_num in latest_episodes.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
              {% if page_num %}
                {% if page_num == latest_episodes.page %}
-                  <span class="px-4 py-2 bg-purple-600 text-white rounded mr-2">{{ page_num }}</span>
+                  <span class="px-4 py-2 bg-purple-600 text-white rounded-full">{{ page_num }}</span>
                {% else %}
-                  <a href="javascript:void(0);" data-url="{{ url_for(request.endpoint, anime_title=request.view_args.anime_title, latest_page=page_num) }}" class="ajax-pagination px-4 py-2 bg-gray-700 text-white rounded mr-2">{{ page_num }}</a>
+                  <a href="javascript:void(0);" 
+                     data-url="{{ url_for('main.index', latest_page=page_num) }}" 
+                     class="ajax-pagination px-4 py-2 bg-[#1a1a2e] hover:bg-purple-600 text-white rounded-full transition-colors duration-300">
+                    {{ page_num }}
+                  </a>
                {% endif %}
              {% else %}
                <span class="px-4 py-2">...</span>
              {% endif %}
           {% endfor %}
           {% if latest_episodes.has_next %}
-            <a href="javascript:void(0);" data-url="{{ url_for(request.endpoint, anime_title=request.view_args.anime_title, latest_page=latest_episodes.next_num) }}" class="ajax-pagination px-4 py-2 bg-gray-700 text-white rounded">Next</a>
+            <a href="javascript:void(0);" 
+               data-url="{{ url_for('main.index', latest_page=latest_episodes.next_num) }}" 
+               class="ajax-pagination px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors duration-300">
+              التالي
+            </a>
           {% endif %}
         </div>
       </div>
@@ -108,60 +153,94 @@
   </section>
 </div>
 
-<!-- JavaScript for Dynamic Height, Trending Scroll Buttons, and AJAX Pagination -->
+<!-- JavaScript for AJAX Pagination and Trending Scroll -->
 <script>
-  // --- Dynamic Height for Top Anime Menu & Latest Episodes Container ---
+  // --- Dynamic Height Adjustment ---
   function adjustColumnHeights() {
     const topAnime = document.querySelector('.top-anime-menu');
     const latestContainer = document.querySelector('.latest-episodes-container');
     if (topAnime && latestContainer) {
-      // Set the latest episodes container's min-height to match the top anime column's height.
       latestContainer.style.minHeight = topAnime.offsetHeight + "px";
     }
   }
-  document.addEventListener("DOMContentLoaded", adjustColumnHeights);
-  window.addEventListener("resize", adjustColumnHeights);
 
-  // --- Trending Scroll Buttons Functionality ---
+  // --- Trending Scroll Controls ---
   function attachTrendingScrollListeners() {
     const trendingContainer = document.getElementById('trending-container');
-    const scrollLeftButton = document.getElementById('scroll-left');
-    const scrollRightButton = document.getElementById('scroll-right');
-    if (trendingContainer && scrollLeftButton && scrollRightButton) {
-      scrollLeftButton.addEventListener('click', function(e) {
-        e.preventDefault();
+    const scrollLeft = document.getElementById('scroll-left');
+    const scrollRight = document.getElementById('scroll-right');
+
+    if (trendingContainer && scrollLeft && scrollRight) {
+      // Remove existing listeners first to prevent duplicates
+      scrollLeft.replaceWith(scrollLeft.cloneNode(true));
+      scrollRight.replaceWith(scrollRight.cloneNode(true));
+      
+      document.getElementById('scroll-left').addEventListener('click', () => {
         trendingContainer.scrollBy({ left: -400, behavior: 'smooth' });
       });
-      scrollRightButton.addEventListener('click', function(e) {
-        e.preventDefault();
+      document.getElementById('scroll-right').addEventListener('click', () => {
         trendingContainer.scrollBy({ left: 400, behavior: 'smooth' });
       });
     }
   }
-  document.addEventListener("DOMContentLoaded", attachTrendingScrollListeners);
 
   // --- AJAX Pagination ---
-  function attachAjaxListeners() {
-    document.querySelectorAll('.ajax-pagination').forEach(link => {
-      link.removeEventListener('click', ajaxPaginationHandler);
-      link.addEventListener('click', ajaxPaginationHandler);
-    });
-  }
-  function ajaxPaginationHandler(event) {
+  function handleAjaxPagination(event) {
     event.preventDefault();
     const currentScrollY = window.scrollY;
-    const url = this.getAttribute('data-url');
-    fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } })
-      .then(response => response.text())
-      .then(html => {
-        document.getElementById('common-content').innerHTML = html;
-        attachAjaxListeners();
-        adjustColumnHeights();
-        attachTrendingScrollListeners();
+    const url = this.dataset.url;
+
+    fetch(url, { 
+      headers: { 
+        'X-Requested-With': 'XMLHttpRequest',
+        'Cache-Control': 'no-cache'
+      } 
+    })
+    .then(response => response.text())
+    .then(html => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const newContent = doc.getElementById('common-content');
+      
+      if (newContent) {
+        // Replace content
+        document.getElementById('common-content').innerHTML = newContent.innerHTML;
+        
+        // Reinitialize ALL components
+        initializeComponents();
+        
+        // Restore scroll
         window.scrollTo(0, currentScrollY);
-      })
-      .catch(error => console.error('Error fetching pagination:', error));
-    return false;
+      }
+    })
+    .catch(error => console.error('Error:', error));
   }
-  attachAjaxListeners();
+
+  // --- Initialize All Components ---
+  function initializeComponents() {
+    // Column heights
+    adjustColumnHeights();
+    
+    // Trending scroll
+    attachTrendingScrollListeners();
+    
+    // Pagination
+    document.querySelectorAll('.ajax-pagination').forEach(link => {
+      link.removeEventListener('click', handleAjaxPagination); // Remove old
+      link.addEventListener('click', handleAjaxPagination);    // Add new
+    });
+  }
+
+  // Initial setup
+  document.addEventListener('DOMContentLoaded', initializeComponents);
+  window.addEventListener('resize', adjustColumnHeights);
+
+  // Reinitialize after AJAX navigation
+  if (history.pushState) {
+    const originalPushState = history.pushState;
+    history.pushState = function(state) {
+      originalPushState.apply(this, arguments);
+      initializeComponents();
+    };
+  }
 </script>

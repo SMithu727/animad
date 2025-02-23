@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+
+{% block title %}آخر الأخبار{% endblock %}
+
+{% block main_class %}pt-[143px]{% endblock %}
+
+
+{% block content %}
+  {% include 'header.html' %}
+
+  <main class="container mx-auto px-4 pt-32 pb-12" dir="rtl">
+    <!-- News Header Section -->
+    <div class="max-w-4xl mx-auto mb-8">
+      <h1 class="text-3xl font-bold text-purple-400 mb-4 border-b-2 border-purple-600 pb-4">
+        <i class="fab fa-twitter ml-2"></i>آخر التغريدات
+      </h1>
+      <p class="text-gray-400 text-lg">تابع أحدث التغريدات من حسابنا الرسمي على تويتر</p>
+    </div>
+
+    <!-- Twitter Timeline Container -->
+    <div class="max-w-4xl mx-auto bg-[#2d2b44] rounded-2xl shadow-xl p-6">
+      <div class="twitter-embed-container">
+        <a class="twitter-timeline"
+           data-lang="ar"
+           data-theme="dark"
+           data-chrome="nofooter noborders noheader"
+           data-height="600"
+           href="https://twitter.com/Ahmedm94m?ref_src=twsrc%5Etfw">
+          تغريدات أحمد
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Twitter Widgets Script -->
+  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+  .twitter-embed-container {
+    position: relative;
+    min-height: 600px;
+    overflow: hidden;
+    border-radius: 1rem;
+    background: #2d2b44;
+  }
+
+  .twitter-timeline {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  iframe#twitter-widget-0 {
+    background: transparent !important;
+    margin: -1px !important; /* Fix for iframe border */
+  }
+</style>
+{% endblock %}

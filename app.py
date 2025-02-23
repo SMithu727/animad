@@ -215,20 +215,26 @@ def genre(genre_name):
     
 @bp.route('/')
 def index():
-    # Select 5 random anime for the spotlight slider
     spotlights = Anime.query.order_by(db.func.random()).limit(5).all()
-    # Select 8 random anime for the trending section
     trending = Anime.query.order_by(db.func.random()).limit(8).all()
-    # Get latest episodes with pagination (20 per page)
     latest_page = request.args.get('latest_page', 1, type=int)
     latest_episodes = Episode.query.order_by(Episode.id.desc()).paginate(page=latest_page, per_page=20, error_out=False)
 
+    # Add this AJAX check
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render_template(
+            '_common_content.html',
+            trending=trending,
+            latest_episodes=latest_episodes,
+            GENRE_TRANSLATIONS=GENRE_TRANSLATIONS
+        )
+    
     return render_template(
         'index.html',
         spotlights=spotlights,
         trending=trending,
         latest_episodes=latest_episodes,
-        GENRE_TRANSLATIONS=GENRE_TRANSLATIONS  # Pass GENRE_TRANSLATIONS to the template
+        GENRE_TRANSLATIONS=GENRE_TRANSLATIONS
     )
 
 @bp.route('/login', methods=['GET', 'POST'])
@@ -482,6 +488,10 @@ def all_anime():
     # Get all anime sorted by title (or use any other ordering/pagination as needed)
     anime_list = Anime.query.order_by(Anime.title).all()
     return render_template("anime_list.html", anime_list=anime_list)
+
+@bp.route('/news')
+def news():
+    return render_template('news.html')
 
 @bp.route('/search')
 def search():
