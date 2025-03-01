@@ -1,11 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{% block title %}Anime Streaming{% endblock %}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}آنيماد - لمشاهدة الأنمي{% endblock %}</title>
+
+  <!-- Open Graph Meta Tags (For Discord, Facebook, WhatsApp) -->
+  <meta property="og:title" content="آنيماد - موقعك الأول لمشاهدة الأنمي">
+  <meta property="og:description" content="استمتع بمشاهدة الأنمي المترجم بدقة عالية وبواجهة سهلة الاستخدام!">
+  <meta property="og:image" content="{{ url_for('static', filename='images/preview.png', _external=True) }}">
+  <meta property="og:url" content="https://yourwebsite.com">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card Meta Tags (For Twitter Previews) -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="آنيماد - أفضل منصة لمشاهدة الأنمي">
+  <meta name="twitter:description" content="شاهد أحدث حلقات الأنمي بجودة عالية الآن!">
+  <meta name="twitter:image" content="{{ url_for('static', filename='images/preview.png', _external=True) }}">
+
+  <!-- Website Favicon (Logo in Browser Tab) -->
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+
   <!-- Load Tailwind CSS via the Play CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+
   <!-- Common CSS for header, scrollbar, etc. -->
   <style>
     /* Header styling */
@@ -27,9 +45,8 @@
       background: linear-gradient(to bottom, rgba(45,43,68,0.5), transparent);
       pointer-events: none;
     }
-    
+
     /* Custom scrollbar styles */
-    /* For WebKit browsers (Chrome, Safari, Opera) */
     ::-webkit-scrollbar {
       width: 12px;
       height: 12px;
@@ -42,13 +59,12 @@
       border-radius: 6px;
       border: 3px solid #1a1a2e;
     }
-    /* For Firefox */
     * {
       scrollbar-width: thin;
       scrollbar-color: #2d2b44 #1a1a2e;
     }
-    
-    /* Optionally hide scrollbars on elements with .no-scrollbar */
+
+    /* Hide scrollbars on elements with .no-scrollbar */
     .no-scrollbar {
       -ms-overflow-style: none;
       scrollbar-width: none;
@@ -68,17 +84,16 @@
   <!-- Include the shared header -->
   {% include 'header.html' %}
   
-  <!-- Page Container (will be shifted when menu opens) -->
+  <!-- Page Container -->
   <div id="page-container" class="transition-transform duration-300">
-    <!-- Main content block; default top padding can be overridden by pages -->
     <main class="{% block main_class %}pt-32{% endblock %}">
       {% block content %}{% endblock %}
     </main>
   </div>
-  
+
   {% block extra_scripts %}{% endblock %}
 
- <!-- Add the footer here -->
+  <!-- Add the footer here -->
 <footer class="bg-[#0d0d1d] mt-24">
   <div class="mx-auto px-6 py-12 max-w-7xl">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-white">

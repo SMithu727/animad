@@ -1,71 +1,78 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Anime Streaming - Sign Up</title>
-  <!-- Load Tailwind CSS via the Play CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gradient-to-b from-[#1a1a2e] to-[#0d0d1d] min-h-screen">
-  {% include 'header.html' %}
-  
-  <!-- Sign Up Form Section -->
-  <main class="flex items-center justify-center mt-40">
-    <div class="bg-white p-10 rounded-lg shadow-lg w-full max-w-md">
-      <h2 class="text-3xl font-bold mb-6 text-center text-[#2d2b44]">تسجيل حساب جديد</h2>
-      
-      <!-- Flash messages -->
+{% extends 'base.html' %}
+
+{% block title %}تسجيل حساب جديد{% endblock %}
+
+{% block main_class %}pt-[143px]{% endblock %}
+
+{% block content %}
+<main class="container mx-auto px-4 pb-12" dir="rtl">
+  <div class="max-w-md mx-auto">
+    <div class="bg-[#2d2b44] rounded-2xl shadow-xl p-8">
+      <h2 class="text-3xl font-bold mb-6 text-purple-400 border-b-2 border-purple-600 pb-4">
+        <i class="fas fa-user-plus ml-2"></i>تسجيل حساب جديد
+      </h2>
+
+      <!-- Flash Messages -->
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-          {% for category, message in messages %}
-            <div class="mb-4 p-3 rounded
-                        {% if category == 'success' %} bg-green-200 text-green-800
-                        {% elif category == 'danger' %} bg-red-200 text-red-800
-                        {% else %} bg-blue-200 text-blue-800 {% endif %}">
-              {{ message }}
-            </div>
-          {% endfor %}
+          <div class="space-y-3 mb-6">
+            {% for category, message in messages %}
+              <div class="p-3 rounded-lg {% if category == 'success' %}bg-green-900/30 text-green-400{% else %}bg-red-900/30 text-red-400{% endif %}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
         {% endif %}
       {% endwith %}
-      
+
       <form method="POST" action="{{ url_for('main.signup') }}">
         {{ form.hidden_tag() }}
-        <div class="mb-4">
-          {{ form.username.label(class="block text-[#2d2b44] text-lg font-semibold mb-2") }}
-          {{ form.username(class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-300") }}
-          {% for error in form.username.errors %}
-            <span class="text-red-500 text-sm">{{ error }}</span>
-          {% endfor %}
+        
+        <div class="space-y-4">
+          <div>
+            {{ form.username.label(class="block text-purple-400 mb-2 font-bold") }}
+            {{ form.username(class="w-full bg-[#1a1a2e] text-white rounded-lg p-3 border border-[#3a3757] focus:ring-2 focus:ring-purple-600 focus:border-transparent") }}
+            {% for error in form.username.errors %}
+              <span class="text-red-400 text-sm">{{ error }}</span>
+            {% endfor %}
+          </div>
+
+          <div>
+            {{ form.email.label(class="block text-purple-400 mb-2 font-bold") }}
+            {{ form.email(class="w-full bg-[#1a1a2e] text-white rounded-lg p-3 border border-[#3a3757] focus:ring-2 focus:ring-purple-600 focus:border-transparent") }}
+            {% for error in form.email.errors %}
+              <span class="text-red-400 text-sm">{{ error }}</span>
+            {% endfor %}
+          </div>
+
+          <div>
+            {{ form.password.label(class="block text-purple-400 mb-2 font-bold") }}
+            {{ form.password(class="w-full bg-[#1a1a2e] text-white rounded-lg p-3 border border-[#3a3757] focus:ring-2 focus:ring-purple-600 focus:border-transparent") }}
+            {% for error in form.password.errors %}
+              <span class="text-red-400 text-sm">{{ error }}</span>
+            {% endfor %}
+          </div>
+
+          <div>
+            {{ form.confirm_password.label(class="block text-purple-400 mb-2 font-bold") }}
+            {{ form.confirm_password(class="w-full bg-[#1a1a2e] text-white rounded-lg p-3 border border-[#3a3757] focus:ring-2 focus:ring-purple-600 focus:border-transparent") }}
+            {% for error in form.confirm_password.errors %}
+              <span class="text-red-400 text-sm">{{ error }}</span>
+            {% endfor %}
+          </div>
         </div>
-        <div class="mb-4">
-          {{ form.email.label(class="block text-[#2d2b44] text-lg font-semibold mb-2") }}
-          {{ form.email(class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-300") }}
-          {% for error in form.email.errors %}
-            <span class="text-red-500 text-sm">{{ error }}</span>
-          {% endfor %}
-        </div>
-        <div class="mb-4">
-          {{ form.password.label(class="block text-[#2d2b44] text-lg font-semibold mb-2") }}
-          {{ form.password(class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-300") }}
-          {% for error in form.password.errors %}
-            <span class="text-red-500 text-sm">{{ error }}</span>
-          {% endfor %}
-        </div>
-        <div class="mb-6">
-          {{ form.confirm_password.label(class="block text-[#2d2b44] text-lg font-semibold mb-2") }}
-          {{ form.confirm_password(class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-300") }}
-          {% for error in form.confirm_password.errors %}
-            <span class="text-red-500 text-sm">{{ error }}</span>
-          {% endfor %}
-        </div>
-        <div class="flex items-center justify-between">
-          <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded">
-            تسجيل حساب
-          </button>
+
+        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition mt-6">
+          إنشاء حساب
+        </button>
+
+        <div class="mt-6 pt-4 border-t border-[#3a3757] text-center">
+          <p class="text-gray-400">لديك حساب بالفعل؟ 
+            <a href="{{ url_for('main.login') }}" class="text-purple-400 hover:text-purple-300">سجل الدخول الآن</a>
+          </p>
         </div>
       </form>
     </div>
-  </main>
-</body>
-</html>
+  </div>
+</main>
+{% endblock %}

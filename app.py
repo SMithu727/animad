@@ -1,11 +1,11 @@
 import html
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify, abort, Flask
 from functools import wraps
 import os
 from werkzeug.utils import secure_filename
 import requests
 from flask_login import login_user, logout_user, login_required, current_user
-from forms import LoginForm, SignupForm, AdminAnimeForm, ProfileForm, CommentForm
+from forms import LoginForm, SignupForm, AdminAnimeForm, ProfileForm, CommentForm, ResetPasswordRequestForm, ResetPasswordForm
 from models import User, Anime, Episode, Comment, CommentVote, WatchHistory
 from extensions import db, cache
 from google.cloud import translate_v2 as translate
@@ -15,6 +15,27 @@ import psutil
 from datetime import datetime, timedelta
 from pathlib import Path
 from dateutil.relativedelta import relativedelta
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer
+from errors import register_error_handlers
+
+# Initialize the Flask app
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'supersecretkey123!@#'
+
+# Email configuration
+app.config['MAIL_SERVER'] = 'smtp-relay.brevo.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = '86ee34001@smtp-brevo.com'
+app.config['MAIL_PASSWORD'] = 'jOMB2Yh91Nd0G3Eb'
+app.config['MAIL_DEFAULT_SENDER'] = 'noreply@animad.site'
+
+# Initialize Flask-Mail with the app
+mail = Mail(app)
+
+# After creating the app, register error handlers
+register_error_handlers(app)
 
 # Initialize the Flask Blueprint
 bp = Blueprint('main', __name__)
@@ -23,7 +44,6 @@ bp = Blueprint('main', __name__)
 credentials = service_account.Credentials.from_service_account_file(
     "C:/Users/xgaem/Downloads/Animad - Copy/credentials/innate-sunset-451719-c5-08a2d0e73f47.json"
 )
-
 # Initialize Google Cloud Translation client
 translate_client = translate.Client(credentials=credentials)
 
@@ -34,7 +54,6 @@ STATUS_TRANSLATIONS = {
     "Not yet aired": "لم يعرض بعد",
     "Cancelled": "ملغي"
 }
-
 GENRE_TRANSLATIONS = {
     "Action": "أكشن",
     "Adventure": "مغامرات",
@@ -53,14 +72,12 @@ GENRE_TRANSLATIONS = {
     "Supernatural": "خوارق",
     "Suspense": "تشويق",
 }
-
 RATING_TRANSLATIONS = {
     "R - 17+ (violence & profanity)": "R - 17+ (عنف ولغة صريحة)",
     "PG-13 - Teens 13 or older": "PG-13 - المراهقون 13 فما فوق",
     "R+ - Mild Nudity": "R+ - عري جزئي",
     "G - All Ages": "G - جميع الأعمار"
 }
-
 TYPE_TRANSLATIONS = {
     "TV": "مسلسل تلفزيوني",
     "Movie": "فيلم",
@@ -68,13 +85,123 @@ TYPE_TRANSLATIONS = {
     "ONA": "أونا",
     "Special": "خاص"
 }
-
 PREMIERED_TRANSLATIONS = {
     "summer": "الصيف",
     "winter": "الشتاء",
     "fall": "الخريف",
     "spring": "الربيع"
 }
+
+# Generate email tokens
+def generate_token(email):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    return serializer.dumps(email, salt='email-confirm-salt')
+
+def confirm_token(token, expiration=3600):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    try:
+        email = serializer.loads(token, salt='email-confirm-salt', max_age=expiration)
+    except:
+        return False
+    return email
+
+# Send verification email using an HTML template
+def send_verification_email(user):
+    token = generate_token(user.email)
+    msg = Message("تأكيد البريد الإلكتروني - آنيماد", recipients=[user.email])
+    msg.html = render_template('email/verify_email.html', token=token)
+    msg.body = f"To verify your email, visit: {url_for('main.verify_email', token=token, _external=True)}\n\nIf you didn't request this, ignore this email."
+    mail.send(msg)
+
+# Send reset password email using an HTML template
+def send_reset_password_email(user):
+    token = user.generate_reset_token()
+    msg = Message('إعادة تعيين كلمة المرور - آنيماد', recipients=[user.email])
+    msg.html = render_template('email/reset_password.html', token=token)
+    msg.body = f"To reset your password, visit: {url_for('main.reset_password', token=token, _external=True)}\n\nIf you didn't request this, ignore this email."
+    mail.send(msg)
+
+# Routes
+@bp.route('/verify/<token>')
+def verify_email(token):
+    if current_user.is_authenticated and current_user.email_verified:
+        return redirect(url_for('main.index'))
+    
+    email = confirm_token(token)
+    if not email:
+        flash('رابط التفعيل غير صالح أو منتهي الصلاحية', 'danger')
+        return redirect(url_for('main.profile'))
+
+    user = User.query.filter_by(email=email).first_or_404()
+    if user.email_verified:
+        flash('البريد الإلكتروني مفعّل بالفعل', 'info')
+    else:
+        user.email_verified = True
+        db.session.commit()
+        flash('تم تفعيل البريد الإلكتروني بنجاح!', 'success')
+    
+    return redirect(url_for('main.profile'))
+
+from forms import ResetPasswordRequestForm, ResetPasswordForm
+
+@bp.route('/reset-password', methods=['GET', 'POST'])
+def reset_password_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    form = ResetPasswordRequestForm()
+    
+    if form.validate_on_submit():
+        email = form.email.data
+        user = User.query.filter_by(email=email).first()
+        if user:
+            # Use the helper function to send an HTML email
+            send_reset_password_email(user)
+            flash('Check your email for reset instructions', 'info')
+            return redirect(url_for('main.login'))
+        else:
+            flash('Email not found', 'danger')
+    
+    return render_template('reset_password_request.html', form=form)
+
+@bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    user = User.verify_reset_token(token)
+    if not user:
+        flash('Invalid or expired token', 'danger')
+        return redirect(url_for('main.reset_password_request'))
+    
+    form = ResetPasswordForm()
+    
+    if form.validate_on_submit():
+        password = form.password.data
+        user.password = password
+        user.password_reset_token = None
+        user.token_expiration = None
+        db.session.commit()
+        flash('Password updated successfully!', 'success')
+        return redirect(url_for('main.login'))
+    
+    return render_template('reset_password.html', form=form, token=token)
+
+@bp.route('/resend-verification', methods=['GET'])
+@login_required
+def resend_verification():
+    if current_user.email_verified:
+        flash('البريد الإلكتروني مفعّل بالفعل', 'info')
+        return redirect(url_for('main.profile'))
+
+    token = generate_token(current_user.email)
+    msg = Message('تفعيل البريد الإلكتروني - آنيماد', recipients=[current_user.email])
+    msg.html = render_template('email/verify_email.html', token=token)
+    msg.body = f"لتفعيل بريدك الإلكتروني، قم بزيارة الرابط التالي:\n{url_for('main.verify_email', token=token, _external=True)}\n\nإذا لم تطلب هذا، يمكنك تجاهل هذه الرسالة."
+    mail.send(msg)
+
+    flash('تم إرسال رابط التفعيل إلى بريدك الإلكتروني', 'success')
+    return redirect(url_for('main.profile'))
 
 # Helper functions
 def translate_duration(duration):
@@ -319,7 +446,8 @@ def logout():
 @login_required
 def profile():
     form = ProfileForm(obj=current_user)
-    
+    original_email = current_user.email
+
     # Get watch history and comments
     watch_history = WatchHistory.query.filter_by(user_id=current_user.id)\
                                       .order_by(WatchHistory.timestamp.desc())\
@@ -329,18 +457,29 @@ def profile():
                                  .limit(10).all()
 
     if form.validate_on_submit():
+        email_changed = form.email.data != original_email
+        
         # Update username and email
         current_user.username = form.username.data
         current_user.email = form.email.data
-        # Update password if provided (hashed automatically)
+        
+        # If email changed, mark as unverified and send verification email
+        if email_changed:
+            current_user.email_verified = False
+            send_verification_email(current_user)
+            flash("تم تغيير البريد الإلكتروني. يرجى التحقق من بريدك الجديد لتفعيله.", "warning")
+
+        # Update password if provided
         if form.password.data:
-            current_user.password = form.password.data  # This will trigger the @password.setter
+            current_user.password = form.password.data
+
         # Handle file upload if a new picture is provided
         if form.picture.data:
             filename = secure_filename(form.picture.data.filename)
             picture_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
             form.picture.data.save(picture_path)
             current_user.profile_picture = filename
+
         db.session.commit()
         flash("تم تحديث الملف الشخصي بنجاح!", "success")
         return redirect(url_for('main.profile'))
@@ -520,9 +659,14 @@ def add_anime():
 
 @bp.route('/anime')
 def all_anime():
-    # Get all anime sorted by title (or use any other ordering/pagination as needed)
-    anime_list = Anime.query.order_by(Anime.title).all()
+    page = request.args.get('page', 1, type=int)  # Get the current page number from URL query parameters
+    per_page = 30  # Number of anime per page (adjust as needed)
+    
+    # Query the database and paginate the results
+    anime_list = Anime.query.order_by(Anime.title).paginate(page=page, per_page=per_page, error_out=False)
+    
     return render_template("anime_list.html", anime_list=anime_list)
+
 
 @bp.route('/news')
 def news():

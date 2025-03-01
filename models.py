@@ -1,5 +1,5 @@
 # models.py
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_login import UserMixin
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -15,6 +15,29 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     comments = db.relationship('Comment', backref='user', lazy=True)
     watch_history = db.relationship('WatchHistory', backref='user', lazy=True)
+    email_verified = db.Column(db.Boolean, default=False)
+    password_reset_token = db.Column(db.String(100))
+    token_expiration = db.Column(db.DateTime)
+
+    def generate_reset_token(self, expires_in=3600):
+        from itsdangerous import URLSafeTimedSerializer
+        from flask import current_app
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        self.password_reset_token = serializer.dumps(self.email, salt='password-reset-salt')
+        self.token_expiration = datetime.utcnow() + timedelta(seconds=expires_in)
+        db.session.commit()
+        return self.password_reset_token
+
+    @staticmethod
+    def verify_reset_token(token):
+        from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+        from flask import current_app
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        try:
+            email = serializer.loads(token, salt='password-reset-salt', max_age=3600)
+        except (BadSignature, SignatureExpired):
+            return None
+        return User.query.filter_by(email=email).first()
 
     # Password hashing
     @property

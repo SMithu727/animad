@@ -1,7 +1,7 @@
 # forms.py
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, IntegerField, TextAreaField, FloatField, HiddenField
-from wtforms.validators import DataRequired, Email, EqualTo, Optional
+from wtforms.validators import DataRequired, Email, EqualTo, Optional, Length
 from flask_wtf.file import FileField, FileAllowed
 
 class LoginForm(FlaskForm):
@@ -56,6 +56,15 @@ class AdminAnimeForm(FlaskForm):
     
     fetch = SubmitField("Fetch from MAL")
     submit = SubmitField("Add Anime")
+
+
+class ResetPasswordRequestForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Request Password Reset')
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[DataRequired(), Length(min=6)])
+    submit = SubmitField('Reset Password')
 
 class CommentForm(FlaskForm):
     parent_id = HiddenField("Parent Comment ID")

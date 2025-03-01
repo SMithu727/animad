@@ -4,22 +4,68 @@
 {% block content %}
 <div id="common-content" class="px-8 py-8" dir="rtl">
   <h1 class="text-4xl font-bold text-purple-900 mb-6 text-right">كل الأنمي</h1>
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-    {% for anime in anime_list %}
-    <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}" class="block transform transition duration-300 hover:scale-105">
-      <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg">
-        <img src="{{ anime.poster_image or url_for('static', filename='images/placeholder.png') }}" alt="{{ anime.title_ar if anime.title_ar else anime.title }}" class="w-full h-64 object-cover">
-        <div class="p-4">
-          <h2 class="text-xl font-bold text-white">{{ anime.title_ar if anime.title_ar else anime.title }}</h2>
+  <!-- Cards container with fixed dimensions -->
+  <div class="flex flex-wrap gap-8 justify-center">
+    {% for anime in anime_list.items %}
+    <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}" 
+       class="block group transform transition duration-300 hover:scale-105 hover:shadow-xl">
+      <div class="relative w-[400px] bg-[#2d2b44] rounded-2xl overflow-hidden shadow-lg">
+        <img src="{{ anime.poster_image or url_for('static', filename='images/placeholder.png') }}" 
+             alt="{{ anime.title_ar if anime.title_ar else anime.title }}" 
+             class="w-full h-[600px] object-cover transform transition duration-300 group-hover:opacity-50">
+        <!-- Optional badge displaying the index -->
+        <div class="absolute top-4 left-4 bg-purple-600 text-white font-bold rounded-full w-12 h-12 flex items-center justify-center shadow-lg">
+          {{ loop.index }}
+        </div>
+        <!-- Gradient overlay to enhance text readability -->
+        <div class="absolute inset-0 bg-gradient-to-t from-[#2d2b44] via-transparent to-transparent"></div>
+        <!-- Card content placed at the bottom -->
+        <div class="absolute bottom-0 left-0 right-0 p-6">
+          <h2 class="text-xl font-bold text-white mb-2">
+            {{ anime.title_ar if anime.title_ar else anime.title }}
+          </h2>
+          <div class="flex items-center space-x-2 text-purple-400">
+            <i class="fas fa-star"></i>
+            <span>{{ anime.mal_score }}</span>
+          </div>
           <div class="mt-2 flex justify-between text-sm text-gray-300">
             <span>التقييم: {{ anime.rating_ar if anime.rating_ar else anime.rating }}</span>
-            <span>MAL: {{ anime.mal_score }}</span>
+            <span>النوع: {{ anime.type_ar if anime.type_ar else anime.type }}</span>
           </div>
-          <p class="mt-1 text-sm text-gray-300">النوع: {{ anime.type_ar if anime.type_ar else anime.type }}</p>
         </div>
       </div>
     </a>
     {% endfor %}
+  </div>
+
+  <!-- Pagination Controls -->
+  <div class="pagination flex justify-center mt-8 space-x-2">
+    {% if anime_list.has_prev %}
+      <a href="{{ url_for('main.all_anime', page=anime_list.prev_num) }}" 
+         class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors duration-300">
+        السابق
+      </a>
+    {% endif %}
+    {% for page_num in anime_list.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+       {% if page_num %}
+         {% if page_num == anime_list.page %}
+            <span class="px-4 py-2 bg-purple-600 text-white rounded-full">{{ page_num }}</span>
+         {% else %}
+            <a href="{{ url_for('main.all_anime', page=page_num) }}" 
+               class="px-4 py-2 bg-[#1a1a2e] hover:bg-purple-600 text-white rounded-full transition-colors duration-300">
+              {{ page_num }}
+            </a>
+         {% endif %}
+       {% else %}
+         <span class="px-4 py-2">...</span>
+       {% endif %}
+    {% endfor %}
+    {% if anime_list.has_next %}
+      <a href="{{ url_for('main.all_anime', page=anime_list.next_num) }}" 
+         class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors duration-300">
+        التالي
+      </a>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

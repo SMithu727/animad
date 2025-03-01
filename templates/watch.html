@@ -95,9 +95,10 @@
               {% if selected_episode and selected_episode.embeds|length > 0 %}
               <div class="p-4 bg-gray-800">
                 <h3 class="text-xl font-bold text-purple-400 mb-2">خوادم العرض:</h3>
-                <div class="flex gap-4">
+                <!-- Flex container: right-aligned and horizontal scroll if needed -->
+                <div class="flex gap-4 justify-start overflow-x-auto">
                   {% for embed in selected_episode.embeds %}
-                  <button class="server-btn bg-gray-700 hover:bg-purple-600 text-white px-4 py-2 rounded" data-link="{{ embed.link }}">
+                  <button class="server-btn bg-gray-700 hover:bg-purple-600 text-white px-4 py-2 whitespace-nowrap rounded" data-link="{{ embed.link }}">
                     {{ embed.server }}
                   </button>
                   {% endfor %}
@@ -111,7 +112,8 @@
                   <h3 class="text-xl font-bold mb-4 text-purple-400">الحلقات</h3>
                 </div>
                 <div class="overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-gray-800 pr-2 max-h-[210px]">
-                  <div class="grid gap-2 grid-cols-[repeat(auto-fit,minmax(100px,1fr))]">
+                  <!-- Fixed-size episode cells (100px width each) -->
+                  <div class="grid gap-2 grid-cols-[repeat(auto-fit,100px)]">
                     {% for episode in range(1, anime.episode_count + 1) %}
                     <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}?ep={{ episode }}"
                        class="flex items-center justify-center bg-gray-700 hover:bg-purple-600 rounded-md w-full aspect-square transition-all duration-300 transform hover:scale-105">
