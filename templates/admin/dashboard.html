@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة التحكم{% endblock %}
+
+{% block main_class %}pt-[143px]{% endblock %}
+
+{% block content %}
+<main class="container mx-auto px-4 pb-12" dir="rtl">
+  <!-- Header Section -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+    <h2 class="text-3xl font-bold text-purple-400 mb-4 md:mb-0">
+      <i class="fas fa-tachometer-alt ml-2"></i>لوحة التحكم الإدارية
+    </h2>
+    <div class="flex gap-4">
+      <a href="{{ url_for('main.translate_all_anime') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
+        <i class="fas fa-language mr-2"></i>ترجمة الأنمي
+      </a>
+      <a href="{{ url_for('main.add_anime') }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+        <i class="fas fa-plus mr-2"></i>إضافة أنمي
+      </a>
+    </div>
+  </div>
+
+  <!-- Quick Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Users Card -->
+    <div class="bg-[#2d2b44] p-6 rounded-xl shadow-lg">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-lg text-gray-400">المستخدمين</h3>
+          <p class="text-3xl font-bold text-purple-400">{{ stats.total_users }}</p>
+        </div>
+        <i class="fas fa-users text-3xl text-purple-600"></i>
+      </div>
+      <a href="{{ url_for('main.manage_users') }}" class="mt-4 inline-block text-sm text-gray-400 hover:text-purple-400">
+        عرض الكل <i class="fas fa-arrow-left ml-1"></i>
+      </a>
+    </div>
+
+    <!-- Anime Card -->
+    <div class="bg-[#2d2b44] p-6 rounded-xl shadow-lg">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-lg text-gray-400">الأنمي</h3>
+          <p class="text-3xl font-bold text-purple-400">{{ stats.total_anime }}</p>
+        </div>
+        <i class="fas fa-tv text-3xl text-purple-600"></i>
+      </div>
+      <a href="{{ url_for('main.manage_animes') }}" class="mt-4 inline-block text-sm text-gray-400 hover:text-purple-400">
+        عرض الكل <i class="fas fa-arrow-left ml-1"></i>
+      </a>
+    </div>
+
+    <!-- Episodes Card -->
+    <div class="bg-[#2d2b44] p-6 rounded-xl shadow-lg">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-lg text-gray-400">الحلقات</h3>
+          <p class="text-3xl font-bold text-purple-400">{{ stats.total_episodes }}</p>
+        </div>
+        <i class="fas fa-film text-3xl text-purple-600"></i>
+      </div>
+      <a href="{{ url_for('main.manage_episodes') }}" class="mt-4 inline-block text-sm text-gray-400 hover:text-purple-400">
+        عرض الكل <i class="fas fa-arrow-left ml-1"></i>
+      </a>
+    </div>
+
+    <!-- Comments Card -->
+    <div class="bg-[#2d2b44] p-6 rounded-xl shadow-lg">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-lg text-gray-400">التعليقات</h3>
+          <p class="text-3xl font-bold text-purple-400">{{ stats.total_comments }}</p>
+        </div>
+        <i class="fas fa-comments text-3xl text-purple-600"></i>
+      </div>
+      <a href="{{ url_for('main.manage_comments') }}" class="mt-4 inline-block text-sm text-gray-400 hover:text-purple-400">
+        عرض الكل <i class="fas fa-arrow-left ml-1"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Recent Activity Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Recent Users -->
+    <div class="bg-[#2d2b44] rounded-xl p-6 shadow-lg">
+      <h3 class="text-xl font-bold text-purple-400 mb-4">
+        <i class="fas fa-user-clock ml-2"></i>المستخدمين الجدد
+      </h3>
+      <div class="space-y-4">
+        {% for user in recent_users %}
+        <div class="flex items-center justify-between bg-[#1a1a2e] p-4 rounded-lg">
+          <div class="flex items-center gap-3">
+            <img src="{{ url_for('static', filename='uploads/' ~ user.profile_picture) if user.profile_picture else url_for('static', filename='images/avatar-placeholder.png') }}" 
+                 class="w-10 h-10 rounded-full object-cover">
+            <div>
+              <p class="font-bold text-white">{{ user.username }}</p>
+              <p class="text-sm text-gray-400">{{ user.email }}</p>
+            </div>
+          </div>
+          <span class="text-sm text-gray-400">{{ user.created_at|datetimeformat }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Recent Anime -->
+    <div class="bg-[#2d2b44] rounded-xl p-6 shadow-lg">
+      <h3 class="text-xl font-bold text-purple-400 mb-4">
+        <i class="fas fa-plus-circle ml-2"></i>أحدث الإضافات
+      </h3>
+      <div class="space-y-4">
+        {% for anime in recent_anime %}
+        <div class="flex items-center justify-between bg-[#1a1a2e] p-4 rounded-lg">
+          <div class="flex items-center gap-3">
+            <img src="{{ anime.poster_image }}" class="w-16 h-24 object-cover rounded-lg">
+            <div>
+              <p class="font-bold text-white">{{ anime.title_ar if anime.title_ar else anime.title }}</p>
+              <p class="text-sm text-gray-400">{{ anime.type_ar if anime.type_ar else anime.type }}</p>
+            </div>
+          </div>
+          <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}" 
+             class="text-purple-400 hover:text-purple-300 text-sm">
+            عرض <i class="fas fa-external-link-alt ml-1"></i>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- System Health Section -->
+  <div class="bg-[#2d2b44] rounded-xl p-6 shadow-lg mb-8">
+    <h3 class="text-xl font-bold text-purple-400 mb-6">
+      <i class="fas fa-heartbeat ml-2"></i>حالة النظام
+    </h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-[#1a1a2e] p-4 rounded-lg text-center">
+        <p class="text-gray-400 mb-2">حالة الخادم</p>
+        <span class="text-green-400 font-bold">
+          <i class="fas fa-check-circle"></i> 
+          {{ 'نشط' if memory_usage < 90 else 'مثقل' }}
+        </span>
+      </div>
+      <div class="bg-[#1a1a2e] p-4 rounded-lg text-center">
+        <p class="text-gray-400 mb-2">مساحة التخزين</p>
+        <span class="text-blue-400 font-bold">
+          {{ "%.2f"|format(storage_usage) }} GB
+        </span>
+      </div>
+      <div class="bg-[#1a1a2e] p-4 rounded-lg text-center">
+        <p class="text-gray-400 mb-2">استخدام الذاكرة</p>
+        <span class="text-yellow-400 font-bold">
+          {{ memory_usage }}%
+        </span>
+      </div>
+      <div class="bg-[#1a1a2e] p-4 rounded-lg text-center">
+        <p class="text-gray-400 mb-2">وقت التشغيل</p>
+        <span class="text-purple-400 font-bold">
+          {{ uptime }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-[#2d2b44] rounded-xl p-6 shadow-lg">
+      <h3 class="text-xl font-bold text-purple-400 mb-4">
+        <i class="fas fa-chart-line ml-2"></i>نشاط المستخدمين
+      </h3>
+      <canvas id="userActivityChart"></canvas>
+      {% if user_data|length == 0 %}
+      <p class="text-gray-400 text-center py-4">لا توجد بيانات متاحة</p>
+      {% endif %}
+    </div>
+    
+    <div class="bg-[#2d2b44] rounded-xl p-6 shadow-lg">
+      <h3 class="text-xl font-bold text-purple-400 mb-4">
+        <i class="fas fa-chart-pie ml-2"></i>توزيع المحتوى
+      </h3>
+      <canvas id="contentDistributionChart"></canvas>
+      {% if stats.total_anime == 0 %}
+      <p class="text-gray-400 text-center py-4">لا توجد بيانات متاحة</p>
+      {% endif %}
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // User Activity Chart
+  const userCtx = document.getElementById('userActivityChart').getContext('2d');
+  new Chart(userCtx, {
+    type: 'line',
+    data: {
+      labels: {{ chart_labels|tojson|safe }},
+      datasets: [{
+        label: 'تسجيلات المستخدمين',
+        data: {{ user_data|tojson|safe }},
+        borderColor: '#8B5CF6',
+        tension: 0.4,
+        fill: true,
+        backgroundColor: 'rgba(139, 92, 246, 0.1)'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: { 
+          grid: { color: '#3a3757' }, 
+          ticks: { 
+            color: '#fff',
+            callback: function(value) { return value % 1 === 0 ? value : ''; }
+          } 
+        },
+        x: { 
+          grid: { color: '#3a3757' }, 
+          ticks: { color: '#fff' } 
+        }
+      }
+    }
+  });
+
+  // Content Distribution Chart
+  const contentCtx = document.getElementById('contentDistributionChart').getContext('2d');
+  new Chart(contentCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['أنمي', 'حلقات', 'تعليقات'],
+      datasets: [{
+        data: [
+          {{ stats.total_anime }},
+          {{ stats.total_episodes }},
+          {{ stats.total_comments }}
+        ],
+        backgroundColor: ['#8B5CF6', '#4F46E5', '#6366F1']
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { 
+          position: 'bottom', 
+          labels: { 
+            color: '#fff',
+            font: {
+              size: 14
+            }
+          } 
+        },
+        tooltip: {
+          enabled: true,
+          bodyFont: { size: 14 }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

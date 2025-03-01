@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "macros.html" import render_pagination %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8" dir="rtl">
+    <h2 class="text-3xl font-bold text-white mb-6">إدارة المستخدمين</h2>
+    
+    <div class="bg-[#2d2b44] rounded-lg shadow-lg overflow-x-auto">
+        <table class="min-w-full">
+            <thead class="bg-[#3a3757]">
+                <tr>
+                    <th class="px-6 py-4 text-right text-white">اسم المستخدم</th>
+                    <th class="px-6 py-4 text-right text-white">البريد الإلكتروني</th>
+                    <th class="px-6 py-4 text-right text-white">الحالة</th>
+                    <th class="px-6 py-4 text-right text-white">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-[#3a3757]">
+                {% for user in users.items %}
+                <tr>
+                    <td class="px-6 py-4 text-white">{{ user.username }}</td>
+                    <td class="px-6 py-4 text-white">{{ user.email }}</td>
+                    <td class="px-6 py-4 text-white">
+                        <span class="px-2 py-1 rounded-full text-sm {{ 'bg-green-500' if user.is_active else 'bg-red-500' }}">
+                            {{ 'مفعل' if user.is_active else 'معطل' }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <!-- Toggle User Form -->
+                        <form method="POST" action="{{ url_for('main.toggle_user', user_id=user.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="bg-{{ 'green' if user.is_active else 'red' }}-500 text-white px-4 py-2 rounded hover:bg-{{ 'green' if user.is_active else 'red' }}-600">
+                                {{ 'تعطيل' if user.is_active else 'تفعيل' }}
+                            </button>
+                        </form>
+                        
+                        <!-- Delete User Form -->
+                        <form method="POST" action="{{ url_for('main.delete_user', user_id=user.id) }}" class="mt-2">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="bg-red-700 text-white px-4 py-2 rounded hover:bg-red-800">
+                                حذف نهائي
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="mt-6">
+        {{ render_pagination(users) }}
+    </div>
+</div>
+{% endblock %}

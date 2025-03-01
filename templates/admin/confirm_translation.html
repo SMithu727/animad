@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 text-center" dir="rtl">
+    <div class="bg-[#2d2b44] rounded-lg shadow-lg p-8 max-w-2xl mx-auto">
+        <h2 class="text-2xl font-bold text-purple-400 mb-6">تأكيد عملية الترجمة</h2>
+        <p class="text-white mb-8">هل أنت متأكد من أنك تريد ترجمة جميع بيانات الأنمي؟ هذه العملية قد تستغرق عدة دقائق.</p>
+        
+        <form method="POST" action="{{ url_for('main.translate_all_anime') }}">
+            <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg mr-4">
+                تأكيد الترجمة
+            </button>
+            <a href="{{ url_for('main.admin_dashboard') }}" class="bg-gray-600 hover:bg-gray-700 text-white py-3 px-8 rounded-lg">
+                إلغاء
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

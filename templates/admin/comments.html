@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "macros.html" import render_pagination %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8" dir="rtl">
+    <h2 class="text-3xl font-bold text-white mb-6">إدارة التعليقات</h2>
+    
+    <div class="bg-[#2d2b44] rounded-lg shadow-lg overflow-x-auto">
+        <table class="min-w-full">
+            <thead class="bg-[#3a3757]">
+                <tr>
+                    <th class="px-6 py-4 text-right text-white">المستخدم</th>
+                    <th class="px-6 py-4 text-right text-white">المحتوى</th>
+                    <th class="px-6 py-4 text-right text-white">الأنمي</th>
+                    <th class="px-6 py-4 text-right text-white">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-[#3a3757]">
+                {% for comment in comments %}
+                <tr>
+                    <td class="px-6 py-4 text-white">{{ comment.user.username }}</td>
+                    <td class="px-6 py-4 text-white max-w-xs truncate">{{ comment.content }}</td>
+                    <td class="px-6 py-4 text-white">{{ comment.anime.title }}</td>
+                    <td class="px-6 py-4">
+                        <form method="POST" action="{{ url_for('main.delete_comment', comment_id=comment.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                                حذف
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="mt-6">
+        {{ render_pagination(comments) }}
+    </div>
+</div>
+{% endblock %}

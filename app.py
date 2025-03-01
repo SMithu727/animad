@@ -1,5 +1,6 @@
 import html
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify, abort
+from functools import wraps
 import os
 from werkzeug.utils import secure_filename
 import requests
@@ -10,6 +11,10 @@ from extensions import db, cache
 from google.cloud import translate_v2 as translate
 from google.oauth2 import service_account
 from dateparser import parse  # For date translation
+import psutil
+from datetime import datetime, timedelta
+from pathlib import Path
+from dateutil.relativedelta import relativedelta
 
 # Initialize the Flask Blueprint
 bp = Blueprint('main', __name__)
@@ -47,9 +52,6 @@ GENRE_TRANSLATIONS = {
     "Sports": "رياضة",
     "Supernatural": "خوارق",
     "Suspense": "تشويق",
-    "Ecchi": "إيتشي",
-    "Erotica": "إيروتيكا",
-    "Hentai": "هنتاي"
 }
 
 RATING_TRANSLATIONS = {
@@ -126,69 +128,100 @@ def translate_text(text, source_lang='en', target_lang='ar'):
         return text  # Fallback to the original text
 
 # Route to translate all anime
-@bp.route('/translate_all_anime', methods=['POST'])
+@bp.route('/translate_all_anime', methods=['GET', 'POST'])
 @login_required
 def translate_all_anime():
+    # Check if user is admin
     if current_user.role != 'admin':
         flash("You do not have permission to access this page.", "danger")
         return redirect(url_for('main.index'))
 
+    # Handle GET request (confirmation page)
+    if request.method == 'GET':
+        return render_template('admin/confirm_translation.html')
+
+    # Handle POST request (actual translation)
     all_anime = Anime.query.all()
     batch_size = 10
-    
-    for i, anime in enumerate(all_anime):
-        try:
-            # Translate status
-            if anime.status and not anime.status_ar:
-                anime.status_ar = STATUS_TRANSLATIONS.get(anime.status, translate_text(anime.status, target_lang='ar'))
+    total_anime = len(all_anime)
+    translated_count = 0
+    errors = []
 
-            # Translate genres
-            if anime.genres and not anime.genres_ar:
-                translated_genres = []
-                for genre in anime.genres.split(', '):
-                    translated = GENRE_TRANSLATIONS.get(genre.strip(), genre.strip())
-                    translated_genres.append(translated)
-                anime.genres_ar = ', '.join(translated_genres)
+    try:
+        for i, anime in enumerate(all_anime):
+            try:
+                # Translate status
+                if anime.status and not anime.status_ar:
+                    anime.status_ar = STATUS_TRANSLATIONS.get(anime.status, translate_text(anime.status, target_lang='ar'))
 
-            # Translate rating
-            if anime.rating and not anime.rating_ar:
-                anime.rating_ar = RATING_TRANSLATIONS.get(anime.rating, translate_text(anime.rating, target_lang='ar'))
+                # Translate genres
+                if anime.genres and not anime.genres_ar:
+                    translated_genres = []
+                    for genre in anime.genres.split(', '):
+                        translated = GENRE_TRANSLATIONS.get(genre.strip(), genre.strip())
+                        translated_genres.append(translated)
+                    anime.genres_ar = ', '.join(translated_genres)
 
-            # Translate type
-            if anime.type and not anime.type_ar:
-                anime.type_ar = TYPE_TRANSLATIONS.get(anime.type, translate_text(anime.type, target_lang='ar'))
+                # Translate rating
+                if anime.rating and not anime.rating_ar:
+                    anime.rating_ar = RATING_TRANSLATIONS.get(anime.rating, translate_text(anime.rating, target_lang='ar'))
 
-            # Translate duration
-            if anime.duration and not anime.duration_ar:
-                anime.duration_ar = translate_duration(anime.duration)
+                # Translate type
+                if anime.type and not anime.type_ar:
+                    anime.type_ar = TYPE_TRANSLATIONS.get(anime.type, translate_text(anime.type, target_lang='ar'))
 
-            # Translate aired dates
-            if anime.aired and not anime.aired_ar:
-                anime.aired_ar = translate_aired(anime.aired)
+                # Translate duration
+                if anime.duration and not anime.duration_ar:
+                    anime.duration_ar = translate_duration(anime.duration)
 
-            # Translate premiered (seasons)
-            if anime.premiered and not anime.premiered_ar:
-                anime.premiered_ar = PREMIERED_TRANSLATIONS.get(anime.premiered, translate_text(anime.premiered, target_lang='ar'))
+                # Translate aired dates
+                if anime.aired and not anime.aired_ar:
+                    anime.aired_ar = translate_aired(anime.aired)
 
-            # Translate description with API (chunked)
-            if not anime.description_ar and anime.description:
-                chunks = [anime.description[i:i+450] for i in range(0, len(anime.description), 450)]
-                translated_chunks = []
-                for chunk in chunks:
-                    translated = translate_text(chunk, target_lang='ar')
-                    translated_chunks.append(translated)
-                anime.description_ar = ' '.join(translated_chunks)
+                # Translate premiered (seasons)
+                if anime.premiered and not anime.premiered_ar:
+                    anime.premiered_ar = PREMIERED_TRANSLATIONS.get(anime.premiered, translate_text(anime.premiered, target_lang='ar'))
 
-        except Exception as e:
-            print(f"Error translating anime ID {anime.id}: {str(e)}")
-            continue
+                # Translate description with API (chunked)
+                if not anime.description_ar and anime.description:
+                    chunks = [anime.description[i:i+450] for i in range(0, len(anime.description), 450)]
+                    translated_chunks = []
+                    for chunk in chunks:
+                        translated = translate_text(chunk, target_lang='ar')
+                        translated_chunks.append(translated)
+                    anime.description_ar = ' '.join(translated_chunks)
 
-        if i % batch_size == 0:
-            db.session.commit()
+                translated_count += 1
 
-    db.session.commit()
-    flash("Translation completed successfully!", "success")
-    return redirect(url_for('main.index'))
+            except Exception as e:
+                errors.append(f"Anime ID {anime.id}: {str(e)}")
+                continue
+
+            # Commit in batches
+            if i % batch_size == 0:
+                db.session.commit()
+
+        # Final commit
+        db.session.commit()
+
+        # Prepare success message
+        success_message = f"Translation completed! {translated_count}/{total_anime} anime translated successfully."
+        if errors:
+            success_message += f" {len(errors)} errors occurred."
+
+        flash(success_message, "success" if not errors else "warning")
+
+        # Log errors if any
+        if errors:
+            current_app.logger.error(f"Translation errors: {errors}")
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Translation failed: {str(e)}")
+        flash(f"Translation failed: {str(e)}", "danger")
+        return redirect(url_for('main.admin_dashboard'))
+
+    return redirect(url_for('main.admin_dashboard'))
 
 
 # Other routes
@@ -242,14 +275,16 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-        # For production, compare hashed passwords!
-        if user and user.password == form.password.data:
+        if user and user.verify_password(form.password.data):  # Use verify_password
+            if not user.is_active:
+                flash("This account has been suspended", "danger")
+                return redirect(url_for('main.login'))
             login_user(user)
-            flash("Logged in successfully!", "success")
+            flash("تم تسجيل الدخول بنجاح!", "success")
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('main.index'))
         else:
-            flash("Invalid email or password.", "danger")
+            flash("البريد الإلكتروني أو كلمة المرور غير صحيحة.", "danger")
     return render_template('login.html', form=form)
 
 @bp.route('/signup', methods=['GET', 'POST'])
@@ -259,17 +294,17 @@ def signup():
         # Check if the email is already registered
         existing_user = User.query.filter_by(email=form.email.data).first()
         if existing_user:
-            flash("Email already registered. Please log in.", "danger")
+            flash("البريد الإلكتروني مسجل مسبقاً. يرجى تسجيل الدخول.", "danger")
         else:
-            # Create new user (in production, hash the password!)
+            # Create new user with hashed password
             new_user = User(
                 username=form.username.data,
                 email=form.email.data,
-                password=form.password.data
+                password=form.password.data  # This will trigger the @password.setter
             )
             db.session.add(new_user)
             db.session.commit()
-            flash("Account created successfully! Please log in.", "success")
+            flash("تم إنشاء الحساب بنجاح! يرجى تسجيل الدخول.", "success")
             return redirect(url_for('main.login'))
     return render_template('signup.html', form=form)
 
@@ -297,9 +332,9 @@ def profile():
         # Update username and email
         current_user.username = form.username.data
         current_user.email = form.email.data
-        # Update password if provided (remember to hash in production)
+        # Update password if provided (hashed automatically)
         if form.password.data:
-            current_user.password = form.password.data
+            current_user.password = form.password.data  # This will trigger the @password.setter
         # Handle file upload if a new picture is provided
         if form.picture.data:
             filename = secure_filename(form.picture.data.filename)
@@ -307,7 +342,7 @@ def profile():
             form.picture.data.save(picture_path)
             current_user.profile_picture = filename
         db.session.commit()
-        flash("Profile updated successfully!", "success")
+        flash("تم تحديث الملف الشخصي بنجاح!", "success")
         return redirect(url_for('main.profile'))
     
     return render_template(
@@ -577,3 +612,168 @@ def dislike_comment():
 
     db.session.commit()
     return jsonify({"likes": comment.likes, "dislikes": comment.dislikes}), 200
+
+# Admin decorator
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != 'admin':
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Add this to app.py after creating the Flask app instance (in extensions.py or app.py)
+@bp.app_template_filter('datetimeformat')
+def datetimeformat(value, format='%Y-%m-%d %H:%M'):
+    if value is None:
+        return ""
+    return value.strftime(format)
+
+@bp.route('/admin/dashboard')
+@login_required
+@admin_required
+def admin_dashboard():
+    # Basic stats
+    stats = {
+        'total_users': User.query.count(),
+        'total_anime': Anime.query.count(),
+        'total_episodes': Episode.query.count(),
+        'total_comments': Comment.query.count(),
+    }
+
+    # Recent activity
+    recent_users = User.query.order_by(User.created_at.desc()).limit(5).all()
+    recent_anime = Anime.query.order_by(Anime.created_at.desc()).limit(5).all()
+
+    # User Activity Chart Data (Last 6 months)
+    months = []
+    user_counts = []
+    for i in range(5, -1, -1):
+        month = datetime.now() - relativedelta(months=i)
+        start = month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        end = (start + relativedelta(months=1)) - timedelta(days=1)
+        
+        count = User.query.filter(
+            User.created_at >= start,
+            User.created_at <= end
+        ).count()
+        
+        months.append(start.strftime("%b %Y"))
+        user_counts.append(count)
+
+    # Content Distribution Data
+    content_data = {
+        'anime': stats['total_anime'],
+        'episodes': stats['total_episodes'],
+        'comments': stats['total_comments']
+    }
+
+    # Storage calculation (example: calculate uploads folder size)
+    uploads_path = os.path.join(current_app.root_path, 'static/uploads')
+    total_storage = round(sum(f.stat().st_size for f in Path(uploads_path).glob('**/*') if f.is_file()) / (1024**3), 2)  # in GB
+
+    # Memory usage
+    memory = psutil.virtual_memory()
+    memory_usage = round(memory.percent, 1)
+
+    # Uptime calculation (example)
+    start_time = datetime.now() - timedelta(days=2, hours=5, minutes=30)
+    uptime = datetime.now() - start_time
+    uptime_str = str(uptime).split('.')[0]  # Remove microseconds
+
+    return render_template('admin/dashboard.html',
+                         stats=stats,
+                         recent_users=recent_users,
+                         recent_anime=recent_anime,
+                         chart_labels=months,
+                         user_data=user_counts,
+                         content_data=content_data,
+                         storage_usage=total_storage,
+                         memory_usage=memory_usage,
+                         uptime=uptime_str)
+
+# Anime Management
+@bp.route('/admin/animes')
+@login_required
+@admin_required
+def manage_animes():
+    page = request.args.get('page', 1, type=int)
+    anime_list = Anime.query.order_by(Anime.created_at.desc()).paginate(page=page, per_page=20)
+    return render_template('admin/animes.html', anime_list=anime_list)
+
+@bp.route('/admin/delete_anime/<int:anime_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_anime(anime_id):
+    anime = Anime.query.get_or_404(anime_id)
+    db.session.delete(anime)
+    db.session.commit()
+    flash('تم حذف الأنمي بنجاح', 'success')
+    return redirect(url_for('main.manage_animes'))
+
+# Episode Management
+@bp.route('/admin/episodes')
+@login_required
+@admin_required
+def manage_episodes():
+    page = request.args.get('page', 1, type=int)
+    episodes = Episode.query.order_by(Episode.created_at.desc()).paginate(page=page, per_page=50)
+    return render_template('admin/episodes.html', episodes=episodes)
+
+@bp.route('/admin/delete_episode/<int:episode_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_episode(episode_id):
+    episode = Episode.query.get_or_404(episode_id)
+    db.session.delete(episode)
+    db.session.commit()
+    flash('تم حذف الحلقة بنجاح', 'success')
+    return redirect(url_for('main.manage_episodes'))
+
+# Comment Management
+@bp.route('/admin/comments')
+@login_required
+@admin_required
+def manage_comments():
+    page = request.args.get('page', 1, type=int)
+    comments = Comment.query.order_by(Comment.created_at.desc()).paginate(page=page, per_page=50)
+    return render_template('admin/comments.html', comments=comments)
+
+@bp.route('/admin/delete_comment/<int:comment_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    db.session.delete(comment)
+    db.session.commit()
+    flash('تم حذف التعليق بنجاح', 'success')
+    return redirect(url_for('main.manage_comments'))
+
+# User Management
+@bp.route('/admin/users')
+@login_required
+@admin_required
+def manage_users():
+    page = request.args.get('page', 1, type=int)
+    users = User.query.order_by(User.created_at.desc()).paginate(page=page, per_page=50)
+    return render_template('admin/users.html', users=users)
+
+@bp.route('/admin/toggle_user/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def toggle_user(user_id):
+    user = User.query.get_or_404(user_id)
+    user.is_active = not user.is_active
+    db.session.commit()
+    flash(f'تم {"تفعيل" if user.is_active else "تعطيل"} الحساب بنجاح', 'success')
+    return redirect(url_for('main.manage_users'))
+
+@bp.route('/admin/delete_user/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    flash('تم حذف المستخدم بنجاح', 'success')
+    return redirect(url_for('main.manage_users'))
