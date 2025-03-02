@@ -1,8 +1,8 @@
-"""newskibidi
+"""newskibidiwwqh
 
-Revision ID: 2840a27a6f47
+Revision ID: c658df4cfd17
 Revises: 
-Create Date: 2025-03-01 14:02:41.168861
+Create Date: 2025-03-01 22:30:04.959503
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '2840a27a6f47'
+revision = 'c658df4cfd17'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -47,6 +47,7 @@ def upgrade():
     sa.Column('poster_image', sa.String(length=255), nullable=True),
     sa.Column('portrait_image', sa.String(length=255), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('mal_id', sa.Integer(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('user',
@@ -58,6 +59,14 @@ def upgrade():
     sa.Column('role', sa.String(length=20), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('email_verified', sa.Boolean(), nullable=True),
+    sa.Column('password_reset_token', sa.String(length=100), nullable=True),
+    sa.Column('token_expiration', sa.DateTime(), nullable=True),
+    sa.Column('mal_user_id', sa.String(length=50), nullable=True),
+    sa.Column('mal_username', sa.String(length=100), nullable=True),
+    sa.Column('mal_access_token', sa.String(length=200), nullable=True),
+    sa.Column('mal_refresh_token', sa.String(length=200), nullable=True),
+    sa.Column('mal_profile_pic', sa.String(length=255), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')

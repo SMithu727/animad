@@ -31,6 +31,9 @@ class AdminAnimeForm(FlaskForm):
     mal_id = IntegerField("MAL ID", validators=[Optional()])
     
     # Anime fields (using StringField for numeric values so they display properly)
+    mal_id = IntegerField("MAL ID", validators=[Optional()])
+    
+    # Anime fields (using StringField for numeric values so they display properly)
     title = StringField("Title", validators=[Optional()])
     rating = StringField("Rating", validators=[Optional()])
     quality = StringField("Quality", validators=[Optional()])

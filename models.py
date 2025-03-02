@@ -18,7 +18,13 @@ class User(UserMixin, db.Model):
     email_verified = db.Column(db.Boolean, default=False)
     password_reset_token = db.Column(db.String(100))
     token_expiration = db.Column(db.DateTime)
-
+    # Add to models.py
+    mal_user_id = db.Column(db.String(50))
+    mal_username = db.Column(db.String(100))
+    mal_access_token = db.Column(db.String(200))
+    mal_refresh_token = db.Column(db.String(200))
+    mal_profile_pic = db.Column(db.String(255))
+    
     def generate_reset_token(self, expires_in=3600):
         from itsdangerous import URLSafeTimedSerializer
         from flask import current_app
@@ -88,6 +94,8 @@ class Anime(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     episodes = db.relationship('Episode', backref='anime', lazy=True)
     comments = db.relationship('Comment', backref='anime', lazy=True)
+    is_spotlight = db.Column(db.Boolean, default=False)
+    mal_id = db.Column(db.Integer)
 
     def __repr__(self):
         return f"<Anime {self.title}>"

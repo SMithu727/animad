@@ -39,6 +39,37 @@
           </div>
         {% endif %}
 
+        <!-- Replace AniList section with MAL -->
+<div class="bg-[#2d2b44] rounded-2xl shadow-xl p-8 mt-8">
+  <h2 class="text-2xl font-bold mb-6 text-purple-400 border-b-2 border-purple-600 pb-4">
+    <i class="fas fa-external-link-alt ml-2"></i>رابط MyAnimeList
+  </h2>
+  
+  {% if current_user.mal_user_id %}
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-4">
+      <i class="fas fa-check-circle text-green-400 text-2xl"></i>
+      <div>
+        <p class="text-white">مرتبط بحساب MAL</p>
+        <p class="text-gray-400 text-sm">{{ current_user.mal_username }}</p>
+      </div>
+    </div>
+    <a href="{{ url_for('main.unlink_mal') }}" 
+       class="text-red-400 hover:text-red-300 px-4 py-2 rounded-lg transition">
+      إلغاء الربط
+    </a>
+  </div>
+  {% else %}
+  <div class="text-center">
+    <p class="text-gray-400 mb-4">لم يتم ربط حساب MAL بعد</p>
+    <a href="{{ url_for('main.link_mal') }}" 
+       class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition">
+      <i class="fas fa-external-link-alt ml-2"></i>ربط حساب MAL
+    </a>
+  </div>
+  {% endif %}
+</div>
+
         <!-- Update Form -->
         <form method="POST" action="{{ url_for('main.profile') }}" enctype="multipart/form-data" class="space-y-6">
           {{ form.hidden_tag() }}
@@ -88,6 +119,16 @@
             حفظ التغييرات
           </button>
         </form>
+
+        <!-- profile.html - Add MAL list section -->
+<div class="bg-[#2d2b44] rounded-2xl shadow-xl p-8 mt-8">
+  <h2 class="text-2xl font-bold mb-6 text-purple-400 border-b-2 border-purple-600 pb-4">
+    <i class="fas fa-list-alt ml-2"></i>قائمة MAL
+  </h2>
+  <div id="mal-anime-list" class="space-y-4">
+    <!-- Content loaded via JavaScript -->
+  </div>
+</div>
 
     <!-- History Sections -->
     <div class="max-w-4xl mx-auto space-y-12">
@@ -157,6 +198,39 @@
 
 {% block extra_scripts %}
 <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    fetch('/get_mal_anime_list')
+    .then(response => response.json())
+    .then(data => {
+        const container = document.getElementById('mal-anime-list');
+        data.forEach(anime => {
+            container.innerHTML += `
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-white font-bold">${anime.node.title}</h4>
+                        <span class="badge ${getStatusClass(anime.list_status.status)}">
+                            ${anime.list_status.status}
+                        </span>
+                    </div>
+                    <div class="mt-2 text-sm text-gray-300">
+                        Episodes: ${anime.list_status.num_episodes_watched} | 
+                        Score: ${anime.list_status.score || 'N/A'}
+                    </div>
+                </div>`;
+        });
+    });
+});
+
+function getStatusClass(status) {
+    const classes = {
+        'watching': 'bg-blue-500',
+        'completed': 'bg-green-500',
+        'on_hold': 'bg-yellow-500',
+        'dropped': 'bg-red-500',
+        'plan_to_watch': 'bg-gray-500'
+    };
+    return classes[status] || 'bg-gray-500';
+}
   // Profile picture preview
   document.getElementById('picture')?.addEventListener('change', function(e) {
     const reader = new FileReader();

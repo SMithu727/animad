@@ -72,6 +72,68 @@
                   قراءة المزيد →
                 </button>
               </div>
+
+              <!-- MAL Status Section -->
+              {% if current_user.is_authenticated and current_user.mal_access_token %}
+              <div class="mt-6 bg-gradient-to-br from-purple-900/50 to-gray-800 p-6 rounded-2xl shadow-xl">
+                <h3 class="text-xl font-bold text-purple-400 mb-4 border-b border-purple-600 pb-2">
+                  <i class="fas fa-list-alt mr-2"></i>حالة المتابعة على MyAnimeList
+                </h3>
+                
+                <!-- Status Indicator -->
+                {% if existing_status %}
+                <div class="mb-4 flex items-center space-x-3 text-sm">
+                  <span class="bg-purple-600 px-3 py-1 rounded-full">الحالة الحالية: {{ existing_status|title }}</span>
+                  {% if existing_score %}<span class="bg-purple-600 px-3 py-1 rounded-full">التقييم: {{ existing_score }}</span>{% endif %}
+                  {% if existing_episodes %}<span class="bg-purple-600 px-3 py-1 rounded-full">الحلقات: {{ existing_episodes }}</span>{% endif %}
+                </div>
+                {% endif %}
+
+                <form id="mal-status-form" class="space-y-4">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-purple-300 mb-2 text-sm">الحالة</label>
+                      <select name="status" class="w-full bg-gray-700 text-white p-3 rounded-lg border border-purple-600 focus:ring-2 focus:ring-purple-500">
+                        <option value="watching" {% if existing_status == 'watching' %}selected{% endif %}>أشاهد الآن</option>
+                        <option value="completed" {% if existing_status == 'completed' %}selected{% endif %}>مكتمل</option>
+                        <option value="on_hold" {% if existing_status == 'on_hold' %}selected{% endif %}>مؤجل</option>
+                        <option value="dropped" {% if existing_status == 'dropped' %}selected{% endif %}>ملغية</option>
+                        <option value="plan_to_watch" {% if existing_status == 'plan_to_watch' %}selected{% endif %}>مخطط له</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label class="block text-purple-300 mb-2 text-sm">الحلقات المشاهدة</label>
+                      <input type="number" name="episodes" value="{{ existing_episodes }}" 
+                             class="w-full bg-gray-700 text-white p-3 rounded-lg border border-purple-600 focus:ring-2 focus:ring-purple-500"
+                             min="0" max="{{ anime.episode_count }}">
+                    </div>
+
+                    <div>
+                      <label class="block text-purple-300 mb-2 text-sm">التقييم (0-10)</label>
+                      <input type="number" name="score" value="{{ existing_score }}" 
+                             class="w-full bg-gray-700 text-white p-3 rounded-lg border border-purple-600 focus:ring-2 focus:ring-purple-500"
+                             min="0" max="10" step="0.1">
+                    </div>
+                  </div>
+
+                  <button type="submit" 
+                          class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02]">
+                    <i class="fas fa-sync-alt mr-2"></i>تحديث الحالة
+                  </button>
+                </form>
+              </div>
+              {% else %}
+              <div class="mt-6 bg-gradient-to-br from-purple-900/50 to-gray-800 p-6 rounded-2xl shadow-xl">
+                <p class="text-purple-300 mb-4">
+                  <i class="fas fa-info-circle mr-2"></i>
+                  قم <a href="{{ url_for('main.link_mal') }}" class="text-purple-400 hover:text-purple-300 underline">بربط حساب MAL</a> 
+                  لمتابعة حالتك وتقييماتك
+                </p>
+              </div>
+              {% endif %}
             </div>
           </div>
 
@@ -95,7 +157,6 @@
               {% if selected_episode and selected_episode.embeds|length > 0 %}
               <div class="p-4 bg-gray-800">
                 <h3 class="text-xl font-bold text-purple-400 mb-2">خوادم العرض:</h3>
-                <!-- Flex container: right-aligned and horizontal scroll if needed -->
                 <div class="flex gap-4 justify-start overflow-x-auto">
                   {% for embed in selected_episode.embeds %}
                   <button class="server-btn bg-gray-700 hover:bg-purple-600 text-white px-4 py-2 whitespace-nowrap rounded" data-link="{{ embed.link }}">
@@ -112,7 +173,6 @@
                   <h3 class="text-xl font-bold mb-4 text-purple-400">الحلقات</h3>
                 </div>
                 <div class="overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-gray-800 pr-2 max-h-[210px]">
-                  <!-- Fixed-size episode cells (100px width each) -->
                   <div class="grid gap-2 grid-cols-[repeat(auto-fit,100px)]">
                     {% for episode in range(1, anime.episode_count + 1) %}
                     <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}?ep={{ episode }}"
@@ -130,7 +190,7 @@
     </div>
   </div>
 
-  <!-- Comment Section (No blurred background here) -->
+  <!-- Comment Section -->
   <div class="watch-comments">
     <section class="w-full my-8 bg-gray-800 p-6 rounded-lg" dir="rtl">
       <h3 class="text-2xl font-bold text-purple-400 mb-4">التعليقات</h3>
@@ -207,12 +267,44 @@
 
 {% block extra_scripts %}
 <script>
+  // MAL Status Form Submission
+  document.getElementById('mal-status-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Get the CSRF token from the form
+    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+    
+    // Create FormData object
+    const formData = new FormData(this);
+    const payload = Object.fromEntries(formData);
+    
+    fetch(`/update_mal_status/{{ anime.mal_id }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken  // Include CSRF token in headers
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            alert('تم التحديث بنجاح!');
+        } else {
+            alert('خطأ: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error(error);
+        alert('Network error: ' + error.message);
+    });
+  });
+
   // Toggle Description Script
   const description = document.getElementById('anime-description');
   const toggleBtn = document.getElementById('toggle-description');
   toggleBtn.addEventListener('click', () => {
     description.classList.toggle('line-clamp-4');
-    description.classList.toggle('line-clamp-none');
     toggleBtn.textContent = description.classList.contains('line-clamp-4') 
       ? 'قراءة المزيد →' 
       : 'إظهار أقل ←';

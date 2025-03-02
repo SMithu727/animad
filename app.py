@@ -1,5 +1,5 @@
 import html
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify, abort, Flask
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify, abort, Flask, session
 from functools import wraps
 import os
 from werkzeug.utils import secure_filename
@@ -16,12 +16,26 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from dateutil.relativedelta import relativedelta
 from flask_mail import Mail, Message
+from flask_wtf import CSRFProtect
 from itsdangerous import URLSafeTimedSerializer
 from errors import register_error_handlers
+import secrets
+import base64
+import logging
+
+# Configure logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 # Initialize the Flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecretkey123!@#'
+csrf = CSRFProtect(app)
 
 # Email configuration
 app.config['MAIL_SERVER'] = 'smtp-relay.brevo.com'
@@ -91,6 +105,16 @@ PREMIERED_TRANSLATIONS = {
     "fall": "الخريف",
     "spring": "الربيع"
 }
+
+# Admin decorator
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != 'admin':
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 # Generate email tokens
 def generate_token(email):
@@ -372,11 +396,267 @@ def genre(genre_name):
                          anime_list=anime_list,
                          genre_name=arabic_genre,
                          GENRE_TRANSLATIONS=GENRE_TRANSLATIONS)
+
+# Replace AniList routes with MAL integration
+
+def refresh_mal_token(user):
+    token_url = 'https://myanimelist.net/v1/oauth2/token'
+    auth_header = base64.b64encode(
+        f"{current_app.config['MAL_CLIENT_ID']}:{current_app.config['MAL_CLIENT_SECRET']}".encode()
+    ).decode()
     
+    headers = {
+        'Authorization': f'Basic {auth_header}',
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }
+    
+    data = {
+        'grant_type': 'refresh_token',
+        'refresh_token': user.mal_refresh_token
+    }
+    
+    try:
+        response = requests.post(token_url, headers=headers, data=data)
+        response.raise_for_status()
+        token_data = response.json()
+        
+        user.mal_access_token = token_data['access_token']
+        user.mal_refresh_token = token_data['refresh_token']
+        db.session.commit()
+        return True
+    except Exception as e:
+        current_app.logger.error(f"Token refresh failed: {str(e)}")
+        return False
+
+def generate_pkce():
+    code_verifier = secrets.token_urlsafe(64)[:128]  # 43-128 chars
+    code_challenge = code_verifier  # 'plain' method
+    return code_verifier, code_challenge
+
+@bp.route('/link_mal')
+@login_required
+def link_mal():
+    # Generate PKCE values
+    code_verifier, code_challenge = generate_pkce()
+    
+    # Store code_verifier and state in session
+    session['mal_code_verifier'] = code_verifier
+    session['mal_auth_state'] = secrets.token_urlsafe(16)
+    session.modified = True  # Ensure session is saved
+    
+    # Build authorization URL
+    mal_auth_url = (
+    "https://myanimelist.net/v1/oauth2/authorize"
+    f"?response_type=code"
+    f"&client_id={current_app.config['MAL_CLIENT_ID']}"
+    f"&state={session['mal_auth_state']}"
+    f"&redirect_uri={current_app.config['MAL_REDIRECT_URI']}"
+    f"&code_challenge={code_challenge}"
+    "&code_challenge_method=plain"
+    "&scope=read write"  # Request both read and write permissions
+    )
+    return redirect(mal_auth_url)
+
+@bp.route('/unlink_mal')
+@login_required
+def unlink_mal():
+    # Clear MAL-related fields from the user
+    current_user.mal_access_token = None
+    current_user.mal_refresh_token = None
+    current_user.mal_user_id = None
+    current_user.mal_username = None
+    db.session.commit()
+    
+    flash('تم إلغاء ربط حساب MAL بنجاح', 'success')
+    return redirect(url_for('main.profile'))
+
+@bp.route('/mal_callback')
+def mal_callback():
+    # Verify state parameter
+    state = request.args.get('state')
+    if state != session.get('mal_auth_state'):
+        flash('Authorization failed: State mismatch', 'danger')
+        return redirect(url_for('main.profile'))
+    
+    code = request.args.get('code')
+    if not code:
+        flash('Authorization failed', 'danger')
+        return redirect(url_for('main.profile'))
+    
+    # Retrieve stored code_verifier
+    code_verifier = session.pop('mal_code_verifier', None)
+    if not code_verifier:
+        flash('Authorization session expired', 'danger')
+        return redirect(url_for('main.profile'))
+    
+    # Exchange code for tokens
+    token_url = 'https://myanimelist.net/v1/oauth2/token'
+    auth_header = base64.b64encode(
+        f"{current_app.config['MAL_CLIENT_ID']}:{current_app.config['MAL_CLIENT_SECRET']}".encode()
+    ).decode()
+    
+    headers = {
+        'Authorization': f'Basic {auth_header}',
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }
+    
+    data = {
+        'client_id': current_app.config['MAL_CLIENT_ID'],
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': current_app.config['MAL_REDIRECT_URI'],
+        'code_verifier': code_verifier
+    }
+    
+    try:
+        response = requests.post(token_url, headers=headers, data=data)
+        response.raise_for_status()  # Will raise HTTPError for 4xx/5xx
+        token_data = response.json()
+        
+        # Get MAL user info
+        headers = {'Authorization': f'Bearer {token_data["access_token"]}'}
+        user_response = requests.get(
+            'https://api.myanimelist.net/v2/users/@me',
+            headers=headers
+        )
+        user_response.raise_for_status()
+        user_data = user_response.json()
+        
+        # Update user with MAL data
+        current_user.mal_profile_pic = user_data.get('picture')
+        current_user.mal_user_id = user_data.get('id')
+        
+        # Update user model
+        current_user.mal_access_token = token_data['access_token']
+        current_user.mal_refresh_token = token_data['refresh_token']
+        current_user.mal_user_id = user_data['id']
+        current_user.mal_username = user_data['name']
+        db.session.commit()
+        
+        flash('MAL account linked successfully!', 'success')
+    except requests.exceptions.HTTPError as e:
+        current_app.logger.error(f"MAL HTTP error: {e.response.text}")
+        flash('Failed to link MAL account: Invalid client credentials or code', 'danger')
+    except Exception as e:
+        current_app.logger.error(f"MAL error: {str(e)}", exc_info=True)
+        flash('Failed to link MAL account: Unexpected error', 'danger')
+    
+    return redirect(url_for('main.profile'))
+
+# app.py - Add update route
+@csrf.exempt
+@bp.route('/update_mal_status/<int:mal_id>', methods=['POST'])  # Change parameter name
+@login_required
+def update_mal_status(mal_id):
+    try:
+        if not current_user.mal_access_token:
+            return jsonify({'success': False, 'error': 'Not linked to MAL'}), 401
+        
+        # Get anime by MAL ID instead of internal ID
+        anime = Anime.query.filter_by(mal_id=mal_id).first_or_404()
+        if not anime.mal_id:
+            return jsonify({'success': False, 'error': 'Anime has no MAL ID'}), 400
+
+        # Parse and validate input
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+
+        status = data.get('status')
+        episodes = int(data.get('episodes', 0))
+        score = int(data.get('score', 0)) if data.get('score') else 0
+
+        if score < 0 or score > 10:
+            return jsonify({'success': False, 'error': 'Score must be between 0-10'}), 400
+
+        # Prepare MAL API request
+        mal_data = {
+            'status': status,
+            'num_watched_episodes': episodes,
+            'score': score
+        }
+
+        headers = {'Authorization': f'Bearer {current_user.mal_access_token}'}
+        
+        # Make request to MAL API
+        response = requests.put(
+    f'https://api.myanimelist.net/v2/anime/{anime.mal_id}/my_list_status',
+    headers=headers,
+    data=mal_data
+)
+        response.raise_for_status()
+
+        return jsonify({'success': True}), 200
+
+    except requests.exceptions.HTTPError as e:
+        # Handle MAL API errors
+        error_message = f"MAL API error: {e.response.text}"
+        current_app.logger.error(error_message)
+        return jsonify({'success': False, 'error': error_message}), 502
+
+    except Exception as e:
+        # Handle other errors
+        error_message = f"Unexpected error: {str(e)}"
+        current_app.logger.error(error_message)
+        return jsonify({'success': False, 'error': error_message}), 500
+
+# app.py - Add new route
+@bp.route('/get_mal_anime_list')
+@login_required
+def get_mal_anime_list():
+    if not current_user.mal_access_token:
+        return jsonify([])
+    
+    headers = {'Authorization': f'Bearer {current_user.mal_access_token}'}
+    params = {'fields': 'list_status', 'limit': 1000}
+    
+    try:
+        response = requests.get(
+            'https://api.myanimelist.net/v2/users/@me/animelist',
+            headers=headers,
+            params=params
+        )
+        response.raise_for_status()
+        return jsonify(response.json().get('data', []))
+    except Exception as e:
+        current_app.logger.error(f"MAL list error: {str(e)}")
+        return jsonify([])
+    
+@bp.route('/admin/spotlight', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def manage_spotlight():
+    # Get search query
+    search_query = request.args.get('q', '')
+    
+    # Get all anime (paginated)
+    page = request.args.get('page', 1, type=int)
+    query = Anime.query.order_by(Anime.title.asc())
+    
+    if search_query:
+        query = query.filter(Anime.title.ilike(f'%{search_query}%'))
+    
+    anime_list = query.paginate(page=page, per_page=20, error_out=False)
+
+    return render_template('admin/spotlight.html', 
+                         anime_list=anime_list,
+                         search_query=search_query)
+
 @bp.route('/')
 def index():
-    spotlights = Anime.query.order_by(db.func.random()).limit(5).all()
-    trending = Anime.query.order_by(db.func.random()).limit(8).all()
+    spotlights = Anime.query.filter_by(is_spotlight=True).order_by(db.func.random()).limit(5).all()
+    best_anime = Anime.query.order_by(Anime.mal_score.desc()).limit(8).all()
+    two_weeks_ago = datetime.utcnow() - timedelta(days=14)
+    trending_anime_ids = db.session.query(
+        WatchHistory.anime_id,
+        db.func.count(WatchHistory.anime_id).label('views')
+    ).filter(WatchHistory.timestamp >= two_weeks_ago
+    ).group_by(WatchHistory.anime_id
+    ).order_by(db.desc('views')
+    ).limit(8).all()
+    
+    trending_anime_ids = [anime_id for (anime_id, views) in trending_anime_ids]
+    trending = Anime.query.filter(Anime.id.in_(trending_anime_ids)).all()
     latest_page = request.args.get('latest_page', 1, type=int)
     latest_episodes = Episode.query.order_by(Episode.id.desc()).paginate(page=latest_page, per_page=20, error_out=False)
 
@@ -392,6 +672,7 @@ def index():
     return render_template(
         'index.html',
         spotlights=spotlights,
+        best_anime=best_anime,
         trending=trending,
         latest_episodes=latest_episodes,
         GENRE_TRANSLATIONS=GENRE_TRANSLATIONS
@@ -497,7 +778,7 @@ def watch(anime_title):
     anime = Anime.query.filter_by(title=formatted_title).first_or_404()
     ep_number = request.args.get('ep', 1, type=int)
     selected_episode = Episode.query.filter_by(anime_id=anime.id, episode_number=ep_number).first()
-    
+
     # Record watch history if user is authenticated
     if current_user.is_authenticated:
         existing_entry = WatchHistory.query.filter_by(
@@ -515,11 +796,10 @@ def watch(anime_title):
             db.session.add(watch_entry)
         else:
             existing_entry.timestamp = db.func.now()
-        
         db.session.commit()
 
+    # Handle comments
     comment_form = CommentForm()
-    
     if comment_form.validate_on_submit():
         if current_user.is_authenticated:
             parent_id = comment_form.parent_id.data if comment_form.parent_id.data else None
@@ -536,24 +816,53 @@ def watch(anime_title):
         else:
             flash("يجب تسجيل الدخول للتعليق.", "danger")
             return redirect(url_for('main.login'))
-    
-    # Get only top-level comments (those without a parent)
-    comments = Comment.query.filter_by(anime_id=anime.id, parent_id=None)\
-                              .order_by(Comment.created_at.desc()).all()
 
+    # Get top-level comments
+    comments = Comment.query.filter_by(anime_id=anime.id, parent_id=None)\
+                            .order_by(Comment.created_at.desc()).all()
+
+    logger.debug("Entered /watch route")
+
+    # Fetch MAL status if user is authenticated and linked to MAL
+    existing_status = None
+    existing_episodes = None
+    existing_score = None
+
+    if current_user.is_authenticated and current_user.mal_access_token:
+        headers = {'Authorization': f'Bearer {current_user.mal_access_token}'}
+        try:
+            # Correct endpoint for single anime status
+            response = requests.get(
+                f'https://api.myanimelist.net/v2/anime/{anime.mal_id}/my_list_status',
+                headers=headers
+            )
+            logger.debug(f"MAL API Response: {response.status_code} - {response.text}")
+            
+            if response.status_code == 200:
+                mal_data = response.json()
+                existing_status = mal_data.get('status')
+                existing_episodes = mal_data.get('num_watched_episodes')
+                existing_score = mal_data.get('score')
+            else:
+                logger.error(f"MAL API Error: {response.status_code}")
+        except Exception as e:
+            logger.error(f"Error: {str(e)}")
+
+    # Random spotlights and trending anime
     spotlights = Anime.query.order_by(db.func.random()).limit(5).all()
     trending = Anime.query.order_by(db.func.random()).limit(8).all()
     latest_page = request.args.get('latest_page', 1, type=int)
     latest_episodes = Episode.query.order_by(Episode.id.desc()).paginate(page=latest_page, per_page=40, error_out=False)
-    
+
+    # Handle AJAX requests
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return render_template(
             '_common_content.html',
             trending=trending,
             latest_episodes=latest_episodes,
-            GENRE_TRANSLATIONS=GENRE_TRANSLATIONS  # Pass GENRE_TRANSLATIONS here
+            GENRE_TRANSLATIONS=GENRE_TRANSLATIONS
         )
-    
+
     return render_template(
         "watch.html",
         anime=anime,
@@ -563,8 +872,30 @@ def watch(anime_title):
         latest_episodes=latest_episodes,
         comment_form=comment_form,
         comments=comments,
-        GENRE_TRANSLATIONS=GENRE_TRANSLATIONS  # Pass GENRE_TRANSLATIONS here
+        existing_status=existing_status,
+        existing_episodes=existing_episodes,
+        existing_score=existing_score,
+        GENRE_TRANSLATIONS=GENRE_TRANSLATIONS
     )
+    
+# app.py
+
+# app.py
+@bp.route('/toggle_spotlight/<int:anime_id>', methods=['POST'])
+@login_required
+@admin_required
+def toggle_spotlight(anime_id):
+    anime = Anime.query.get_or_404(anime_id)
+    anime.is_spotlight = not anime.is_spotlight
+    db.session.commit()
+    
+    # Stay on the same page after toggle
+    page = request.args.get('page', 1)
+    search_query = request.args.get('q', '')
+    return redirect(url_for('main.manage_spotlight', 
+                          page=page, 
+                          q=search_query))
+
 @bp.route('/add_anime', methods=['GET', 'POST'])
 @login_required
 def add_anime():
@@ -647,7 +978,8 @@ def add_anime():
                     studios=form.studios.data,
                     producers=form.producers.data,
                     poster_image=form.poster_image.data,
-                    portrait_image=form.portrait_image.data
+                    portrait_image=form.portrait_image.data,
+                    mal_id=form.mal_id.data  # Store the MAL ID
                 )
                 db.session.add(new_anime)
                 db.session.commit()
@@ -757,7 +1089,8 @@ def dislike_comment():
     db.session.commit()
     return jsonify({"likes": comment.likes, "dislikes": comment.dislikes}), 200
 
-# Admin decorator
+
+# Admin route decorator should be defined before using it
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):

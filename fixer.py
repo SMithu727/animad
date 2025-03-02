@@ -15,19 +15,19 @@ with open('anime_list.json', encoding='utf-8') as f:
     anime_list = json.load(f)
 
 # Fetch the anime from the database using its MAL code.
-anime = Anime.query.filter_by(mal_code=corrupt_mal_code).first()
+anime = Anime.query.filter_by(mal_id=corrupt_mal_code).first()  # Use mal_id instead of mal_code
 if not anime:
-    print(f"Anime with MAL Code {corrupt_mal_code} not found in the database. Exiting.")
+    print(f"Anime with MAL ID {corrupt_mal_code} not found in the database. Exiting.")
     exit()
 
-print(f"\nUpdating anime '{anime.title}' (MAL Code: {corrupt_mal_code}) from MAL API...")
+print(f"\nUpdating anime '{anime.title}' (MAL ID: {corrupt_mal_code}) from MAL API...")
 
 # Fetch updated data from the MAL API.
 response = requests.get(f"https://api.jikan.moe/v4/anime/{corrupt_mal_code}")
 if response.status_code == 200:
     api_data = response.json().get("data", {})
     if not api_data:
-        print(f"  No data found from MAL for code {corrupt_mal_code}. Exiting.")
+        print(f"  No data found from MAL for ID {corrupt_mal_code}. Exiting.")
         exit()
 
     # Update the anime fields using the API response.
@@ -51,17 +51,18 @@ if response.status_code == 200:
         api_data.get("trailer", {}).get("images", {}).get("maximum_image_url") or
         api_data.get("images", {}).get("jpg", {}).get("large_image_url")
     )
+    anime.mal_id = corrupt_mal_code  # Ensure MAL ID is set
 
     db.session.commit()
     print(f"  Anime '{anime.title}' updated with MAL info.")
 else:
-    print(f"  Error fetching MAL data for code {corrupt_mal_code} (status: {response.status_code}). Exiting.")
+    print(f"  Error fetching MAL data for ID {corrupt_mal_code} (status: {response.status_code}). Exiting.")
     exit()
 
-# Find the JSON entry for this anime using its MAL code.
-anime_entry = next((entry for entry in anime_list if entry.get("mal_code") == corrupt_mal_code), None)
+# Find the JSON entry for this anime using its MAL ID.
+anime_entry = next((entry for entry in anime_list if entry.get("mal_id") == corrupt_mal_code), None)  # Use mal_id instead of mal_code
 if not anime_entry:
-    print(f"  No JSON entry found for anime '{anime.title}' (MAL Code: {corrupt_mal_code}). Exiting.")
+    print(f"  No JSON entry found for anime '{anime.title}' (MAL ID: {corrupt_mal_code}). Exiting.")
     exit()
 
 episodes_field = anime_entry.get("episodes")

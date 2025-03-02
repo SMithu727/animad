@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8" dir="rtl">
+    <h2 class="text-3xl font-bold text-white mb-6">إدارة البانر الرئيسي</h2>
+    
+    <!-- Search Box -->
+    <form class="mb-6">
+        <div class="relative">
+            <input type="text" name="q" value="{{ search_query }}" 
+                   placeholder="ابحث عن أنمي..." 
+                   class="w-full bg-[#2d2b44] text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <button type="submit" class="absolute left-3 top-3 text-gray-400">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </form>
+
+    <!-- Anime Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {% for anime in anime_list %}
+        <div class="bg-[#2d2b44] rounded-xl p-4 shadow-lg relative group">
+            <img src="{{ anime.poster_image }}" 
+                 alt="{{ anime.title }}" 
+                 class="w-full h-48 object-cover rounded-lg mb-3">
+            
+            <h3 class="text-white font-semibold mb-2 truncate">
+                {{ anime.title_ar if anime.title_ar else anime.title }}
+            </h3>
+            
+            <form method="POST" action="{{ url_for('main.toggle_spotlight', anime_id=anime.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" 
+                        class="w-full text-center py-2 rounded-lg transition-colors
+                               {% if anime.is_spotlight %}
+                                 bg-green-600 hover:bg-green-700
+                               {% else %}
+                                 bg-purple-600 hover:bg-purple-700
+                               {% endif %}">
+                    {% if anime.is_spotlight %}
+                        <i class="fas fa-star mr-2"></i>مميز
+                    {% else %}
+                        <i class="far fa-star mr-2"></i>اختر للبانر
+                    {% endif %}
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-6 flex justify-center">
+        {% if anime_list.has_prev %}
+            <a href="{{ url_for('main.manage_spotlight', page=anime_list.prev_num, q=search_query) }}"
+               class="px-4 py-2 bg-purple-600 text-white rounded-l-lg hover:bg-purple-700">
+                السابق
+            </a>
+        {% endif %}
+        
+        <span class="px-4 py-2 bg-[#2d2b44] text-white">
+            الصفحة {{ anime_list.page }} من {{ anime_list.pages }}
+        </span>
+
+        {% if anime_list.has_next %}
+            <a href="{{ url_for('main.manage_spotlight', page=anime_list.next_num, q=search_query) }}"
+               class="px-4 py-2 bg-purple-600 text-white rounded-r-lg hover:bg-purple-700">
+                التالي
+            </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

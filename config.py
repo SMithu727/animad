@@ -23,3 +23,7 @@ class Config:
     # Cache configuration
     CACHE_TYPE = 'SimpleCache'  # Use simple in-memory caching
     CACHE_DEFAULT_TIMEOUT = 86400  # Cache timeout in seconds (24 hours)
+    
+    MAL_CLIENT_ID = '51e35dd154e9480cbe810f17a43240a8'  # Removed trailing space
+    MAL_CLIENT_SECRET = 'f4fc075966ce8510d44824bb60086fa2f2cbda050c8e313ccbade4d1a42b1d91'
+    MAL_REDIRECT_URI = 'http://animad.site/mal_callback'
