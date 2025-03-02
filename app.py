@@ -1038,29 +1038,33 @@ def like_comment():
     comment_id = data.get('comment_id')
     if not comment_id:
         return jsonify({"error": "No comment id provided"}), 400
-    comment = Comment.query.get(comment_id)
-    if not comment:
-        return jsonify({"error": "Comment not found"}), 404
 
-    # Check if the user has already voted on this comment.
+    comment = Comment.query.get_or_404(comment_id)
     vote = CommentVote.query.filter_by(user_id=current_user.id, comment_id=comment_id).first()
+
     if vote:
         if vote.vote == 1:
-            # Already liked, so do nothing.
-            return jsonify({"likes": comment.likes, "dislikes": comment.dislikes}), 200
+            # User already liked, so remove the like
+            db.session.delete(vote)
+            comment.likes -= 1
         else:
-            # Change vote from dislike to like.
+            # User previously disliked, change to like
             vote.vote = 1
             comment.likes += 1
             comment.dislikes -= 1
     else:
-        # New like vote.
+        # New like
         vote = CommentVote(user_id=current_user.id, comment_id=comment_id, vote=1)
         db.session.add(vote)
         comment.likes += 1
 
     db.session.commit()
-    return jsonify({"likes": comment.likes, "dislikes": comment.dislikes}), 200
+    return jsonify({
+        "likes": comment.likes,
+        "dislikes": comment.dislikes,
+        "user_liked": comment.user_has_liked(current_user),
+        "user_disliked": comment.user_has_disliked(current_user)
+    }), 200
 
 @bp.route('/dislike_comment', methods=['POST'])
 @login_required
@@ -1069,25 +1073,33 @@ def dislike_comment():
     comment_id = data.get('comment_id')
     if not comment_id:
         return jsonify({"error": "No comment id provided"}), 400
-    comment = Comment.query.get(comment_id)
-    if not comment:
-        return jsonify({"error": "Comment not found"}), 404
 
+    comment = Comment.query.get_or_404(comment_id)
     vote = CommentVote.query.filter_by(user_id=current_user.id, comment_id=comment_id).first()
+
     if vote:
         if vote.vote == -1:
-            return jsonify({"likes": comment.likes, "dislikes": comment.dislikes}), 200
+            # User already disliked, so remove the dislike
+            db.session.delete(vote)
+            comment.dislikes -= 1
         else:
+            # User previously liked, change to dislike
             vote.vote = -1
             comment.dislikes += 1
             comment.likes -= 1
     else:
+        # New dislike
         vote = CommentVote(user_id=current_user.id, comment_id=comment_id, vote=-1)
         db.session.add(vote)
         comment.dislikes += 1
 
     db.session.commit()
-    return jsonify({"likes": comment.likes, "dislikes": comment.dislikes}), 200
+    return jsonify({
+        "likes": comment.likes,
+        "dislikes": comment.dislikes,
+        "user_liked": comment.user_has_liked(current_user),
+        "user_disliked": comment.user_has_disliked(current_user)
+    }), 200
 
 
 # Admin route decorator should be defined before using it

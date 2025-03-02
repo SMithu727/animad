@@ -8,7 +8,7 @@ app = create_app()
 app.app_context().push()  # Ensure database operations work within the app context
 
 # Define the MAL code for the anime you want to update.
-corrupt_mal_code = '40267'  # Replace with the actual MAL code
+corrupt_mal_code = '42941'  # Replace with the actual MAL code
 
 # Load the JSON file containing your full anime list with episode data.
 with open('anime_list.json', encoding='utf-8') as f:

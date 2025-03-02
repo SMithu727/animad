@@ -35,6 +35,53 @@
     position: relative;
     z-index: 10;
   }
+
+  /* Nested comment styling */
+  .comment-nested {
+    position: relative;
+    margin-right: 2rem; /* Adjust indentation for nested comments (RTL) */
+  }
+
+  /* Vertical line to show comment hierarchy (RTL) */
+  .comment-nested::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -1rem; /* Right side for RTL */
+    width: 2px;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.3); /* White line */
+  }
+
+  /* Like and dislike buttons */
+  .like-dislike-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .like-dislike-buttons button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #9ca3af; /* Default gray color */
+    transition: color 0.2s;
+  }
+
+  .like-dislike-buttons button.active {
+    color: #9333ea; /* Purple for active state */
+  }
+
+  .like-dislike-buttons button:hover {
+    color: #9333ea; /* Purple on hover */
+  }
+
+  /* Line clamp styles */
+  .line-clamp-4 {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 </style>
 {% endblock %}
 
@@ -74,65 +121,69 @@
               </div>
 
               <!-- MAL Status Section -->
-              {% if current_user.is_authenticated and current_user.mal_access_token %}
-              <div class="mt-6 bg-gradient-to-br from-purple-900/50 to-gray-800 p-6 rounded-2xl shadow-xl">
-                <h3 class="text-xl font-bold text-purple-400 mb-4 border-b border-purple-600 pb-2">
-                  <i class="fas fa-list-alt mr-2"></i>حالة المتابعة على MyAnimeList
-                </h3>
-                
-                <!-- Status Indicator -->
-                {% if existing_status %}
-                <div class="mb-4 flex items-center space-x-3 text-sm">
-                  <span class="bg-purple-600 px-3 py-1 rounded-full">الحالة الحالية: {{ existing_status|title }}</span>
-                  {% if existing_score %}<span class="bg-purple-600 px-3 py-1 rounded-full">التقييم: {{ existing_score }}</span>{% endif %}
-                  {% if existing_episodes %}<span class="bg-purple-600 px-3 py-1 rounded-full">الحلقات: {{ existing_episodes }}</span>{% endif %}
-                </div>
-                {% endif %}
-
-                <form id="mal-status-form" class="space-y-4">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label class="block text-purple-300 mb-2 text-sm">الحالة</label>
-                      <select name="status" class="w-full bg-gray-700 text-white p-3 rounded-lg border border-purple-600 focus:ring-2 focus:ring-purple-500">
-                        <option value="watching" {% if existing_status == 'watching' %}selected{% endif %}>أشاهد الآن</option>
-                        <option value="completed" {% if existing_status == 'completed' %}selected{% endif %}>مكتمل</option>
-                        <option value="on_hold" {% if existing_status == 'on_hold' %}selected{% endif %}>مؤجل</option>
-                        <option value="dropped" {% if existing_status == 'dropped' %}selected{% endif %}>ملغية</option>
-                        <option value="plan_to_watch" {% if existing_status == 'plan_to_watch' %}selected{% endif %}>مخطط له</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label class="block text-purple-300 mb-2 text-sm">الحلقات المشاهدة</label>
-                      <input type="number" name="episodes" value="{{ existing_episodes }}" 
-                             class="w-full bg-gray-700 text-white p-3 rounded-lg border border-purple-600 focus:ring-2 focus:ring-purple-500"
-                             min="0" max="{{ anime.episode_count }}">
-                    </div>
-
-                    <div>
-                      <label class="block text-purple-300 mb-2 text-sm">التقييم (0-10)</label>
-                      <input type="number" name="score" value="{{ existing_score }}" 
-                             class="w-full bg-gray-700 text-white p-3 rounded-lg border border-purple-600 focus:ring-2 focus:ring-purple-500"
-                             min="0" max="10" step="0.1">
-                    </div>
+              {% if current_user.is_authenticated %}
+                {% if current_user.mal_access_token %}
+                  <div class="mt-6 bg-gradient-to-br from-purple-900/50 to-gray-800 p-6 rounded-2xl shadow-xl">
+                    <h3 class="text-xl font-bold text-purple-400 mb-4 border-b border-purple-600 pb-2">
+                      <i class="fas fa-list-alt mr-2"></i>حالة المتابعة على MyAnimeList
+                    </h3>
+                    <!-- Status Indicator -->
+                    {% if existing_status %}
+                      <div class="mb-4 flex items-center space-x-3 text-sm">
+                        <span class="bg-purple-600 px-3 py-1 rounded-full">الحالة الحالية: {{ existing_status|title }}</span>
+                        {% if existing_score %}<span class="bg-purple-600 px-3 py-1 rounded-full">التقييم: {{ existing_score }}</span>{% endif %}
+                        {% if existing_episodes %}<span class="bg-purple-600 px-3 py-1 rounded-full">الحلقات: {{ existing_episodes }}</span>{% endif %}
+                      </div>
+                    {% endif %}
+                    <form id="mal-status-form" class="space-y-4">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label class="block text-purple-300 mb-2 text-sm">الحالة</label>
+                          <select name="status" class="w-full bg-gray-700 text-white p-3 rounded-lg border border-purple-600 focus:ring-2 focus:ring-purple-500">
+                            <option value="watching" {% if existing_status == 'watching' %}selected{% endif %}>أشاهد الآن</option>
+                            <option value="completed" {% if existing_status == 'completed' %}selected{% endif %}>مكتمل</option>
+                            <option value="on_hold" {% if existing_status == 'on_hold' %}selected{% endif %}>مؤجل</option>
+                            <option value="dropped" {% if existing_status == 'dropped' %}selected{% endif %}>ملغية</option>
+                            <option value="plan_to_watch" {% if existing_status == 'plan_to_watch' %}selected{% endif %}>مخطط له</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label class="block text-purple-300 mb-2 text-sm">الحلقات المشاهدة</label>
+                          <input type="number" name="episodes" value="{{ existing_episodes }}" 
+                                class="w-full bg-gray-700 text-white p-3 rounded-lg border border-purple-600 focus:ring-2 focus:ring-purple-500"
+                                min="0" max="{{ anime.episode_count }}">
+                        </div>
+                        <div>
+                          <label class="block text-purple-300 mb-2 text-sm">التقييم (0-10)</label>
+                          <input type="number" name="score" value="{{ existing_score }}" 
+                                class="w-full bg-gray-700 text-white p-3 rounded-lg border border-purple-600 focus:ring-2 focus:ring-purple-500"
+                                min="0" max="10" step="0.1">
+                        </div>
+                      </div>
+                      <button type="submit" 
+                              class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02]">
+                        <i class="fas fa-sync-alt mr-2"></i>تحديث الحالة
+                      </button>
+                    </form>
                   </div>
-
-                  <button type="submit" 
-                          class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02]">
-                    <i class="fas fa-sync-alt mr-2"></i>تحديث الحالة
-                  </button>
-                </form>
-              </div>
+                {% else %}
+                  <div class="mt-6 bg-gradient-to-br from-purple-900/50 to-gray-800 p-6 rounded-2xl shadow-xl">
+                    <p class="text-purple-300 mb-4">
+                      <i class="fas fa-info-circle mr-2"></i>
+                      قم <a href="{{ url_for('main.link_mal') }}" class="text-purple-400 hover:text-purple-300 underline">بربط حساب MAL</a> 
+                      لمتابعة حالتك وتقييماتك
+                    </p>
+                  </div>
+                {% endif %}
               {% else %}
-              <div class="mt-6 bg-gradient-to-br from-purple-900/50 to-gray-800 p-6 rounded-2xl shadow-xl">
-                <p class="text-purple-300 mb-4">
-                  <i class="fas fa-info-circle mr-2"></i>
-                  قم <a href="{{ url_for('main.link_mal') }}" class="text-purple-400 hover:text-purple-300 underline">بربط حساب MAL</a> 
-                  لمتابعة حالتك وتقييماتك
-                </p>
-              </div>
+                <div class="mt-6 bg-gradient-to-br from-purple-900/50 to-gray-800 p-6 rounded-2xl shadow-xl">
+                  <p class="text-purple-300 mb-4">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    الرجاء <a href="{{ url_for('main.login') }}" class="text-purple-400 hover:text-purple-300 underline">تسجيل الدخول</a> 
+                    لمتابعة حالتك وتقييماتك على MyAnimeList
+                  </p>
+                </div>
               {% endif %}
             </div>
           </div>
@@ -155,16 +206,16 @@
               
               <!-- Server List for Selected Episode -->
               {% if selected_episode and selected_episode.embeds|length > 0 %}
-              <div class="p-4 bg-gray-800">
-                <h3 class="text-xl font-bold text-purple-400 mb-2">خوادم العرض:</h3>
-                <div class="flex gap-4 justify-start overflow-x-auto">
-                  {% for embed in selected_episode.embeds %}
-                  <button class="server-btn bg-gray-700 hover:bg-purple-600 text-white px-4 py-2 whitespace-nowrap rounded" data-link="{{ embed.link }}">
-                    {{ embed.server }}
-                  </button>
-                  {% endfor %}
+                <div class="p-4 bg-gray-800">
+                  <h3 class="text-xl font-bold text-purple-400 mb-2">خوادم العرض:</h3>
+                  <div class="flex gap-4 justify-start overflow-x-auto">
+                    {% for embed in selected_episode.embeds %}
+                      <button class="server-btn bg-gray-700 hover:bg-purple-600 text-white px-4 py-2 whitespace-nowrap rounded" data-link="{{ embed.link }}">
+                        {{ embed.server }}
+                      </button>
+                    {% endfor %}
+                  </div>
                 </div>
-              </div>
               {% endif %}
           
               <!-- Episode Selector -->
@@ -175,10 +226,10 @@
                 <div class="overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-gray-800 pr-2 max-h-[210px]">
                   <div class="grid gap-2 grid-cols-[repeat(auto-fit,100px)]">
                     {% for episode in range(1, anime.episode_count + 1) %}
-                    <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}?ep={{ episode }}"
-                       class="flex items-center justify-center bg-gray-700 hover:bg-purple-600 rounded-md w-full aspect-square transition-all duration-300 transform hover:scale-105">
-                      <span class="text-base font-semibold text-white">حلقة {{ episode }}</span>
-                    </a>
+                      <a href="{{ url_for('main.watch', anime_title=anime.title.replace(' ', '_')) }}?ep={{ episode }}"
+                         class="flex items-center justify-center bg-gray-700 hover:bg-purple-600 rounded-md w-full aspect-square transition-all duration-300 transform hover:scale-105">
+                        <span class="text-base font-semibold text-white">حلقة {{ episode }}</span>
+                      </a>
                     {% endfor %}
                   </div>
                 </div>
@@ -205,57 +256,54 @@
         <p class="mb-4">الرجاء <a href="{{ url_for('main.login') }}" class="text-purple-400">تسجيل الدخول</a> للتعليق.</p>
       {% endif %}
       
-      <div class="mt-6 space-y-6">
+      <!-- Recursive Comment Rendering -->
+      {% macro render_comments(comments, depth=0) %}
         {% for comment in comments %}
-          <div class="p-4 bg-gray-700 rounded" id="comment-{{ comment.id }}">
-            <div class="flex items-center mb-2">
-              <img src="{% if comment.user.profile_picture %}{{ url_for('static', filename='uploads/' ~ comment.user.profile_picture) }}{% else %}{{ url_for('static', filename='default-avatar.png') }}{% endif %}" alt="{{ comment.user.username }}" class="w-10 h-10 rounded-full ml-3">
-              <div>
-                <p class="font-bold">{{ comment.user.username }}</p>
-                <p class="text-sm text-gray-400">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+          <div class="comment-nested" id="comment-{{ comment.id }}" style="margin-right: {{ depth * 2 }}rem;">
+            <div class="p-4 bg-gray-700 rounded">
+              <!-- Show "رد على (name)" for replies -->
+              {% if comment.parent_id %}
+                <p class="text-sm text-purple-400 mb-2">رد على {{ comment.parent.user.username }}</p>
+              {% endif %}
+              <div class="flex items-center mb-2">
+                <img src="{% if comment.user.profile_picture %}{{ url_for('static', filename='uploads/' ~ comment.user.profile_picture) }}{% else %}{{ url_for('static', filename='default-avatar.png') }}{% endif %}" 
+                     alt="{{ comment.user.username }}" 
+                     class="w-10 h-10 rounded-full ml-3">
+                <div>
+                  <p class="font-bold">{{ comment.user.username }}</p>
+                  <p class="text-sm text-gray-400">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                </div>
+              </div>
+              <p class="mb-2">{{ comment.content }}</p>
+              <!-- Like and Dislike Buttons -->
+              <div class="like-dislike-buttons">
+                <button id="like-button-{{ comment.id }}" 
+                        class="like-button {% if current_user.is_authenticated and comment.user_has_liked(current_user) %}active{% endif %}" 
+                        onclick="likeComment({{ comment.id }})">
+                  <i class="fas fa-thumbs-up"></i> (<span id="like-count-{{ comment.id }}">{{ comment.likes }}</span>)
+                </button>
+                <button id="dislike-button-{{ comment.id }}" 
+                        class="dislike-button {% if current_user.is_authenticated and comment.user_has_disliked(current_user) %}active{% endif %}" 
+                        onclick="dislikeComment({{ comment.id }})">
+                  <i class="fas fa-thumbs-down"></i> (<span id="dislike-count-{{ comment.id }}">{{ comment.dislikes }}</span>)
+                </button>
+                <button class="text-sm text-purple-400 hover:text-purple-500" 
+                        onclick="setReply({{ comment.id }}, '{{ comment.user.username }}')">
+                  رد
+                </button>
               </div>
             </div>
-            <p class="mb-2">{{ comment.content }}</p>
-            <div class="flex items-center space-x-4">
-              <button id="like-button-{{ comment.id }}" class="text-sm text-purple-400 hover:text-purple-500" onclick="likeComment({{ comment.id }})">
-                إعجاب (<span id="like-count-{{ comment.id }}">{{ comment.likes }}</span>)
-              </button>
-              <button id="dislike-button-{{ comment.id }}" class="text-sm text-purple-400 hover:text-purple-500" onclick="dislikeComment({{ comment.id }})">
-                عدم إعجاب (<span id="dislike-count-{{ comment.id }}">{{ comment.dislikes }}</span>)
-              </button>
-              <button class="text-sm text-purple-400 hover:text-purple-500" onclick="setReply({{ comment.id }}, '{{ comment.user.username }}')">
-                رد
-              </button>
-            </div>
+            <!-- Recursive call for replies -->
             {% if comment.replies %}
-            <div class="mt-4 ml-8 space-y-4">
-              {% for reply in comment.replies %}
-                <div class="p-4 bg-gray-600 rounded" id="comment-{{ reply.id }}">
-                  <div class="flex items-center mb-2">
-                    <img src="{% if reply.user.profile_picture %}{{ url_for('static', filename='uploads/' ~ reply.user.profile_picture) }}{% else %}{{ url_for('static', filename='default-avatar.png') }}{% endif %}" alt="{{ reply.user.username }}" class="w-8 h-8 rounded-full ml-2">
-                    <div>
-                      <p class="font-bold">{{ reply.user.username }}</p>
-                      <p class="text-xs text-gray-300">{{ reply.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
-                    </div>
-                  </div>
-                  <p class="mb-2 text-sm">{{ reply.content }}</p>
-                  <div class="flex items-center space-x-4">
-                    <button id="like-button-{{ reply.id }}" class="text-xs text-purple-400 hover:text-purple-500" onclick="likeComment({{ reply.id }})">
-                      إعجاب (<span id="like-count-{{ reply.id }}">{{ reply.likes }}</span>)
-                    </button>
-                    <button id="dislike-button-{{ reply.id }}" class="text-xs text-purple-400 hover:text-purple-500" onclick="dislikeComment({{ reply.id }})">
-                      عدم إعجاب (<span id="dislike-count-{{ reply.id }}">{{ reply.dislikes }}</span>)
-                    </button>
-                    <button class="text-xs text-purple-400 hover:text-purple-500" onclick="setReply({{ reply.id }}, '{{ reply.user.username }}')">
-                      رد
-                    </button>
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
+              {{ render_comments(comment.replies, depth + 1) }}
             {% endif %}
           </div>
         {% endfor %}
+      {% endmacro %}
+
+      <!-- Render all comments -->
+      <div class="mt-6 space-y-6">
+        {{ render_comments(comments) }}
       </div>
     </section>
   </div>
@@ -267,48 +315,56 @@
 
 {% block extra_scripts %}
 <script>
-  // MAL Status Form Submission
-  document.getElementById('mal-status-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    // Get the CSRF token from the form
-    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-    
-    // Create FormData object
-    const formData = new FormData(this);
-    const payload = Object.fromEntries(formData);
-    
-    fetch(`/update_mal_status/{{ anime.mal_id }}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken  // Include CSRF token in headers
-        },
-        body: JSON.stringify(payload)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if(data.success) {
-            alert('تم التحديث بنجاح!');
-        } else {
-            alert('خطأ: ' + (data.error || 'Unknown error'));
-        }
-    })
-    .catch(error => {
-        console.error(error);
-        alert('Network error: ' + error.message);
-    });
+  // Toggle Description Script
+  document.addEventListener('DOMContentLoaded', function() {
+    const description = document.getElementById('anime-description');
+    const toggleBtn = document.getElementById('toggle-description');
+
+    if (description && toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        description.classList.toggle('line-clamp-4');
+        toggleBtn.textContent = description.classList.contains('line-clamp-4') 
+          ? 'قراءة المزيد →' 
+          : 'إظهار أقل ←';
+      });
+    }
   });
 
-  // Toggle Description Script
-  const description = document.getElementById('anime-description');
-  const toggleBtn = document.getElementById('toggle-description');
-  toggleBtn.addEventListener('click', () => {
-    description.classList.toggle('line-clamp-4');
-    toggleBtn.textContent = description.classList.contains('line-clamp-4') 
-      ? 'قراءة المزيد →' 
-      : 'إظهار أقل ←';
-  });
+  // MAL Status Form Submission
+  const malStatusForm = document.getElementById('mal-status-form');
+  if (malStatusForm) {
+    malStatusForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Get the CSRF token from the form
+      const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+      
+      // Create FormData object
+      const formData = new FormData(this);
+      const payload = Object.fromEntries(formData);
+      
+      fetch(`/update_mal_status/{{ anime.mal_id }}`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken  // Include CSRF token in headers
+          },
+          body: JSON.stringify(payload)
+      })
+      .then(response => response.json())
+      .then(data => {
+          if(data.success) {
+              alert('تم التحديث بنجاح!');
+          } else {
+              alert('خطأ: ' + (data.error || 'Unknown error'));
+          }
+      })
+      .catch(error => {
+          console.error(error);
+          alert('Network error: ' + error.message);
+      });
+    });
+  }
 
   // Server Button Functionality
   const videoPlayer = document.getElementById('video-player');
@@ -328,47 +384,49 @@
   }
 
   function likeComment(commentId) {
-    const likeBtn = document.getElementById('like-button-' + commentId);
-    const dislikeBtn = document.getElementById('dislike-button-' + commentId);
-    if (likeBtn && !likeBtn.disabled) {
-      likeBtn.disabled = true;
-      if (dislikeBtn) { dislikeBtn.disabled = true; }
-      fetch('{{ url_for("main.like_comment") }}', {
-         method: 'POST',
-         headers: {
-           'Content-Type': 'application/json',
-           'X-CSRFToken': "{{ csrf_token() }}"
-         },
-         body: JSON.stringify({ comment_id: commentId })
-      })
-      .then(response => response.json())
-      .then(data => {
-         document.getElementById('like-count-' + commentId).textContent = data.likes;
-      })
-      .catch(err => console.error(err));
-    }
+    fetch('{{ url_for("main.like_comment") }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': "{{ csrf_token() }}"
+      },
+      body: JSON.stringify({ comment_id: commentId })
+    })
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('like-count-' + commentId).textContent = data.likes;
+      document.getElementById('dislike-count-' + commentId).textContent = data.dislikes;
+  
+      const likeBtn = document.getElementById('like-button-' + commentId);
+      const dislikeBtn = document.getElementById('dislike-button-' + commentId);
+  
+      likeBtn.classList.toggle('active', data.user_liked);
+      dislikeBtn.classList.toggle('active', data.user_disliked);
+    })
+    .catch(err => console.error(err));
   }
-
+  
   function dislikeComment(commentId) {
-    const dislikeBtn = document.getElementById('dislike-button-' + commentId);
-    const likeBtn = document.getElementById('like-button-' + commentId);
-    if (dislikeBtn && !dislikeBtn.disabled) {
-      dislikeBtn.disabled = true;
-      if (likeBtn) { likeBtn.disabled = true; }
-      fetch('{{ url_for("main.dislike_comment") }}', {
-         method: 'POST',
-         headers: {
-           'Content-Type': 'application/json',
-           'X-CSRFToken': "{{ csrf_token() }}"
-         },
-         body: JSON.stringify({ comment_id: commentId })
-      })
-      .then(response => response.json())
-      .then(data => {
-         document.getElementById('dislike-count-' + commentId).textContent = data.dislikes;
-      })
-      .catch(err => console.error(err));
-    }
+    fetch('{{ url_for("main.dislike_comment") }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': "{{ csrf_token() }}"
+      },
+      body: JSON.stringify({ comment_id: commentId })
+    })
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('dislike-count-' + commentId).textContent = data.dislikes;
+      document.getElementById('like-count-' + commentId).textContent = data.likes;
+  
+      const dislikeBtn = document.getElementById('dislike-button-' + commentId);
+      const likeBtn = document.getElementById('like-button-' + commentId);
+  
+      dislikeBtn.classList.toggle('active', data.user_disliked);
+      likeBtn.classList.toggle('active', data.user_liked);
+    })
+    .catch(err => console.error(err));
   }
 </script>
 {% endblock %}

@@ -131,6 +131,25 @@ class Comment(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_flagged = db.Column(db.Boolean, default=False)
     replies = db.relationship('Comment', backref=db.backref('parent', remote_side=[id]), lazy=True)
+    def user_has_liked(self, user):
+        """Check if the user has liked this comment."""
+        if not user.is_authenticated:
+            return False
+        return CommentVote.query.filter_by(
+            user_id=user.id,
+            comment_id=self.id,
+            vote=1
+        ).first() is not None
+
+    def user_has_disliked(self, user):
+        """Check if the user has disliked this comment."""
+        if not user.is_authenticated:
+            return False
+        return CommentVote.query.filter_by(
+            user_id=user.id,
+            comment_id=self.id,
+            vote=-1
+        ).first() is not None
 
     def __repr__(self):
         return f"<Comment {self.id} by User {self.user_id} on Anime {self.anime_id}>"
@@ -154,4 +173,7 @@ class CommentVote(db.Model):
     comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=False)
     vote = db.Column(db.Integer, nullable=False)  # 1 for like, -1 for dislike
 
-    __table_args__ = (db.UniqueConstraint('user_id', 'comment_id', name='_user_comment_uc'),)
+    # Ensure each user can only vote once per comment
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'comment_id', name='unique_user_comment_vote'),
+    )
