@@ -1,5 +1,5 @@
-import html
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify, abort, Flask, session
+# app.py
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify, abort, session
 from functools import wraps
 import os
 from werkzeug.utils import secure_filename
@@ -7,7 +7,7 @@ import requests
 from flask_login import login_user, logout_user, login_required, current_user
 from forms import LoginForm, SignupForm, AdminAnimeForm, ProfileForm, CommentForm, ResetPasswordRequestForm, ResetPasswordForm
 from models import User, Anime, Episode, Comment, CommentVote, WatchHistory
-from extensions import db, cache
+from extensions import db, cache, csrf
 from google.cloud import translate_v2 as translate
 from google.oauth2 import service_account
 from dateparser import parse  # For date translation
@@ -18,10 +18,10 @@ from dateutil.relativedelta import relativedelta
 from flask_mail import Mail, Message
 from flask_wtf import CSRFProtect
 from itsdangerous import URLSafeTimedSerializer
-from errors import register_error_handlers
 import secrets
 import base64
 import logging
+import html
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -32,27 +32,11 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-# Initialize the Flask app
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'supersecretkey123!@#'
-csrf = CSRFProtect(app)
-
-# Email configuration
-app.config['MAIL_SERVER'] = 'smtp-relay.brevo.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = '86ee34001@smtp-brevo.com'
-app.config['MAIL_PASSWORD'] = 'jOMB2Yh91Nd0G3Eb'
-app.config['MAIL_DEFAULT_SENDER'] = 'noreply@animad.site'
-
-# Initialize Flask-Mail with the app
-mail = Mail(app)
-
-# After creating the app, register error handlers
-register_error_handlers(app)
-
 # Initialize the Flask Blueprint
 bp = Blueprint('main', __name__)
+
+# Initialize the Mail object
+mail = Mail()
 
 # Load the JSON key file for Google Cloud Translation API
 credentials = service_account.Credentials.from_service_account_file(
@@ -115,14 +99,13 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-
 # Generate email tokens
 def generate_token(email):
-    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     return serializer.dumps(email, salt='email-confirm-salt')
 
 def confirm_token(token, expiration=3600):
-    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     try:
         email = serializer.loads(token, salt='email-confirm-salt', max_age=expiration)
     except:
@@ -165,8 +148,6 @@ def verify_email(token):
         flash('تم تفعيل البريد الإلكتروني بنجاح!', 'success')
     
     return redirect(url_for('main.profile'))
-
-from forms import ResetPasswordRequestForm, ResetPasswordForm
 
 @bp.route('/reset-password', methods=['GET', 'POST'])
 def reset_password_request():
@@ -373,7 +354,6 @@ def translate_all_anime():
         return redirect(url_for('main.admin_dashboard'))
 
     return redirect(url_for('main.admin_dashboard'))
-
 
 # Other routes
 @bp.route('/genre/<genre_name>')
@@ -1046,19 +1026,21 @@ def like_comment():
         if vote.vote == 1:
             # User already liked, so remove the like
             db.session.delete(vote)
-            comment.likes -= 1
         else:
             # User previously disliked, change to like
             vote.vote = 1
-            comment.likes += 1
-            comment.dislikes -= 1
     else:
         # New like
         vote = CommentVote(user_id=current_user.id, comment_id=comment_id, vote=1)
         db.session.add(vote)
-        comment.likes += 1
 
     db.session.commit()
+
+    # Recalculate likes and dislikes after commit
+    comment.likes = CommentVote.query.filter_by(comment_id=comment_id, vote=1).count()
+    comment.dislikes = CommentVote.query.filter_by(comment_id=comment_id, vote=-1).count()
+    db.session.commit()
+
     return jsonify({
         "likes": comment.likes,
         "dislikes": comment.dislikes,
@@ -1081,19 +1063,21 @@ def dislike_comment():
         if vote.vote == -1:
             # User already disliked, so remove the dislike
             db.session.delete(vote)
-            comment.dislikes -= 1
         else:
             # User previously liked, change to dislike
             vote.vote = -1
-            comment.dislikes += 1
-            comment.likes -= 1
     else:
         # New dislike
         vote = CommentVote(user_id=current_user.id, comment_id=comment_id, vote=-1)
         db.session.add(vote)
-        comment.dislikes += 1
 
     db.session.commit()
+
+    # Recalculate likes and dislikes after commit
+    comment.likes = CommentVote.query.filter_by(comment_id=comment_id, vote=1).count()
+    comment.dislikes = CommentVote.query.filter_by(comment_id=comment_id, vote=-1).count()
+    db.session.commit()
+
     return jsonify({
         "likes": comment.likes,
         "dislikes": comment.dislikes,

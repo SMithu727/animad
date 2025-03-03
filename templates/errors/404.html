@@ -1,11 +1,311 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="text-center py-24">
-  <h1 class="text-9xl font-bold text-purple-500 mb-8">404</h1>
-  <p class="text-2xl text-gray-300 mb-8">Page Not Found</p>
-  <a href="{{ url_for('main.index') }}" class="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition">
-    Go Home
-  </a>
+<!-- 404 Page with Centered Content -->
+<div class="flex flex-col min-h-screen">
+  <div class="flex-grow flex flex-col items-center justify-center px-4">
+    <h1 class="text-9xl font-bold text-purple-500 mb-8">404</h1>
+    <p class="text-2xl text-gray-300 mb-8 text-center">
+      الصفحة غير متوفرة - تبدو كأنك تائه بين العوالم
+    </p>
+    <a href="{{ url_for('main.index') }}"
+       class="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition">
+      العودة للصفحة الرئيسية
+    </a>
+  </div>
 </div>
+
+<!-- Visual Novel Overlay -->
+<div id="visual-novel" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+  <!-- Fixed-Size Container with Dynamic Background -->
+  <div id="vn-container" class="relative rounded-lg overflow-hidden"
+       style="width:1280px; height:720px; background-size: cover; background-position: center;">
+    <!-- Close Button -->
+    <button id="vn-close" class="absolute top-4 right-4 bg-red-600 px-3 py-1 rounded hover:bg-red-700 text-white">X</button>
+    <!-- Bottom Dialogue Panel -->
+    <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-60 p-6">
+      <div id="vn-text" class="text-xl text-white text-center leading-relaxed"></div>
+      <div id="vn-choices" class="flex flex-wrap gap-4 justify-center mt-4"></div>
+    </div>
+    <!-- OST Audio Element -->
+    <audio id="vn-audio" preload="auto" loop>
+      <source src="{{ url_for('static', filename='audio/ost.mp3') }}" type="audio/mp3">
+      متصفحك لا يدعم تشغيل الصوت.
+    </audio>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const staticBase = "{{ url_for('static', filename='images/') }}";
+  let hasKnife = false;
+  /* Narrative Tree:
+     Main Scenes (indices 0-11):
+     0: Corridor (bg1)
+       - Choices: "تابع السير نحو نهاية الممر" → 1, "تفحص النوافذ" → 12, "تراجع وأهرب" → action.
+     1: Jungle (bg2)
+       - Choices: "تابع التجوال" → 2, "تفحص نقوش الأشجار" → 13, "عد إلى الممر" → 0.
+     2: Distant Cabin (bg3)
+       - Choices: "اقترب من الكوخ" → 3, "راقب الكوخ من بعيد" → 19, "عد إلى الغابة" → 1.
+     3: Cabin Interior (bg4)
+       - Choices: "التقاط السكين" (setKnife true) → 4, "ترك السكين والمضي نحو الباب" → 4, "تفحص الطاولة" → 14, "عد إلى الخارج" → 2.
+     4: Door to Stairs (bg5)
+       - Choices: "ادخل إلى الدرج" → 5, "تفحص الباب والسلالم" → 15, "عد إلى غرفة الكوخ" → 3.
+     5: Stairs (bg5)
+       - Choices: "تابع النزول" → 6, "تفحص السلالم" → 16, "عد إلى الباب" → 4.
+     6: Princess Room (bg6)
+       - Choices: "تحدث معها برفق" → 7, "هاجمها" → (if hasKnife then 8 else 10), "تفحص الغرفة" → 17, "عد إلى السلالم" → 5.
+     7: Conversation with Princess (bg7)
+       - Choices: "اسألها عن ماضيها" → 18, "أطلق سراحها" → 11, "عد إلى غرفتها" → 6.
+     8: Successful Attack (bg9)
+       - Choices: "شاهد الانكسار" → 9.
+     9: World-Shattering Ending (bg10)
+       - Choices: "انهِ الرحلة" → action.
+     10: Failed Attack (bg6)
+       - Choices: "أعد التفكير" → 6.
+     11: Spare Ending (bg8)
+       - Choices: "انهِ الرحلة" → action.
+     
+     Extra Branches (indices 12-19):
+     12: Examine Windows (bg1) → then "تابع السير" → 0.
+     13: Examine Trees (bg2) → then "تابع التجوال" → 1.
+     14: Examine the Table (bg4) → then "تابع نحو الباب" → 3.
+     15: Examine Door & Stairs (bg5) → then "تابع إلى الدرج" → 4.
+     16: Examine the Labyrinth (bg5) → then "تابع النزول" → 5.
+     17: Examine Princess Room (bg6) → then "تابع" → 6.
+     18: Ask About Her Past (bg7) → then "تابع الحديث" → 7.
+     19: Observe the Cabin (bg3) → then options: "اقترب الآن" → 3, "عد إلى الغابة" → 1.
+  */
+  const visualNovel = [
+    { // 0: Corridor (bg1)
+      text: "تستيقظ في ممرٍ قديمٍ مغمور بضباب الليل، حيث تعكس النوافذ المكسورة أشباحَ قصصٍ منسية. الهواء مثقلٌ بأسرار تنتظر من يكتشفها.",
+      bg: "bg1.jpg",
+      choices: [
+        { text: "تابع السير نحو نهاية الممر", next: 1 },
+        { text: "تفحص النوافذ", next: 12 },
+        { text: "تراجع وأهرب", action: () => window.location.href = "{{ url_for('main.index') }}" }
+      ]
+    },
+    { // 1: Jungle (bg2)
+      text: "تنفتح أمامك غابة غريبة، حيث تختلط ألوان الليل بضوء القمر الخافت، وتهمس الأشجار بأسرار دفينة.",
+      bg: "bg2.jpg",
+      choices: [
+        { text: "تابع التجوال", next: 2 },
+        { text: "تفحص نقوش الأشجار", next: 13 },
+        { text: "عد إلى الممر", next: 0 }
+      ]
+    },
+    { // 2: Distant Cabin (bg3)
+      text: "وسط الغابة يظهر كوخ قديم يطفو بين الضباب كأثر من عصور مضت. ينبعث منه أنين الأيام الخوالي.",
+      bg: "bg3.jpg",
+      choices: [
+        { text: "اقترب من الكوخ", next: 3 },
+        { text: "راقب الكوخ من بعيد", next: 19 },
+        { text: "عد إلى الغابة", next: 1 }
+      ]
+    },
+    { // 3: Cabin Interior (bg4)
+      text: "تدخل الكوخ وتجد غرفةً هادئة يغمرها ضوء خافت. على طاولة عتيقة يلمع سكين براق، وبجانبها باب ثقيل يقود إلى درج غامض.",
+      bg: "bg4.jpg",
+      choices: [
+        { text: "التقاط السكين", setKnife: true, next: 4 },
+        { text: "ترك السكين والمضي نحو الباب", next: 4 },
+        { text: "تفحص الطاولة بعناية", next: 14 },
+        { text: "عد إلى الخارج", next: 2 }
+      ]
+    },
+    { // 4: Door to Stairs (bg5)
+      text: "تقف أمام باب ثقيل يفتح على درج يؤدي إلى أعماق الكوخ. هذا الباب ليس مخرجاً للعالم الخارجي، بل مدخل لعالم من الظلال.",
+      bg: "bg5.jpg",
+      choices: [
+        { text: "ادخل إلى الدرج", next: 5 },
+        { text: "تفحص الباب والسلالم", next: 15 },
+        { text: "عد إلى غرفة الكوخ", next: 3 }
+      ]
+    },
+    { // 5: Stairs (bg5)
+      text: "تنزل على سلالم لا تنتهي، تمتد الدرجات نحو أعماق الظلام. كل درجة تهمس بأسرار لا تُقال.",
+      bg: "bg5.jpg",
+      choices: [
+        { text: "تابع النزول", next: 6 },
+        { text: "تفحص تعقيد السلالم", next: 16 },
+        { text: "عد إلى الباب", next: 4 }
+      ]
+    },
+    { // 6: Princess Room (bg6)
+      text: "تصل إلى غرفة معتمة حيث تجلس أميرة مقيّدة بالسلاسل. عيناها تحملان حكايات وجع دفين، والهواء يشم رائحة الزمن الضائع.",
+      bg: "bg6.jpg",
+      choices: [
+        { text: "تحدث معها برفق", next: 7 },
+        { text: "هاجمها", next: null }, // Outcome depends on knife.
+        { text: "تفحص تفاصيل الغرفة", next: 17 },
+        { text: "عد إلى السلالم", next: 5 }
+      ]
+    },
+    { // 7: Conversation with Princess (bg7)
+      text: "تبدأ محادثة عميقة مع الأميرة، حيث تنساب كلماتها كالنسيم في ليالي الشتاء وتكشف قصة عشق ضائع ووعد انكسر.",
+      bg: "bg7.jpg",
+      choices: [
+        { text: "اسألها عن ماضيها", next: 18 },
+        { text: "أطلق سراحها بلطف", next: 11 },
+        { text: "عد إلى غرفتها", next: 6 }
+      ]
+    },
+    { // 8: Successful Attack (bg9)
+      text: "بفضل السكين التي اقتنيتها، تضرب الأميرة بضربة حاسمة. في لحظة درامية، ينكسر الزمن وتتحطم جدران الواقع معلنة نهاية مريرة.",
+      bg: "bg9.jpg",
+      choices: [
+        { text: "شاهد الانكسار", next: 9 }
+      ]
+    },
+    { // 9: World-Shattering Ending (bg10)
+      text: "ينكسر الواقع كالزجاج المتطاير، وتعود إلى عالمك وقد تغيرت معالمه إلى الأبد بفعل تلك اللحظة القاسية.",
+      bg: "bg10.jpg",
+      choices: [
+        { text: "انهِ الرحلة", action: () => window.location.href = "{{ url_for('main.index') }}" }
+      ]
+    },
+    { // 10: Failed Attack (bg6)
+      text: "تحاول الهجوم دون امتلاك السكين؛ يذوب غضبك أمام هدوء الأميرة التي تهمس: \"لم أخبرك أن الطريق ليس سهلاً؟\". تعود إلى غرفتها وأنت تشعر بالندم.",
+      bg: "bg6.jpg",
+      choices: [
+        { text: "أعد التفكير في خياراتك", next: 6 }
+      ]
+    },
+    { // 11: Spare Ending (bg8)
+      text: "بعد حوار مليء بالتأمل، تقرر إطلاق سراحها. حين تتحرر قيودها، تخرج أيدٍ غريبة من الظلال لتحتضنك، فتعود إلى عالمك وقد تغيرت نظرتك للحياة.",
+      bg: "bg8.jpg",
+      choices: [
+        { text: "انهِ الرحلة", action: () => window.location.href = "{{ url_for('main.index') }}" }
+      ]
+    },
+    { // 12: Examine Windows (Extra from Scene 0, bg1)
+      text: "تقترب من إحدى النوافذ وتلاحظ صوراً باهتة لوجوه غامضة وظلالاً تتراقص مع أنين الرياح. هذه اللمحة تزيدك إصراراً على معرفة ما تخفيه.",
+      bg: "bg1.jpg",
+      choices: [
+        { text: "تابع السير", next: 0 }
+      ]
+    },
+    { // 13: Examine Trees (Extra from Scene 1, bg2)
+      text: "تقف أمام شجرة عملاقة محفورة على جذعها كلمات كأنها آهات الزمن، فتزداد رغبتك في اكتشاف أسرار الغابة.",
+      bg: "bg2.jpg",
+      choices: [
+        { text: "تابع التجوال", next: 1 }
+      ]
+    },
+    { // 14: Examine the Table (Extra from Scene 3, bg4)
+      text: "تنظر إلى الطاولة والنقوش الدقيقة على السكين، لتدرك أن كل خط يحمل ذكرى من زمنٍ مضى.",
+      bg: "bg4.jpg",
+      choices: [
+        { text: "تابع نحو الباب", next: 3 }
+      ]
+    },
+    { // 15: Examine Door & Stairs (Extra from Scene 4, bg5)
+      text: "تدقق في تفاصيل الباب والسلالم القديمة، فتشعر بأن كل درجة تحمل رسالة من زمنٍ ماضٍ.",
+      bg: "bg5.jpg",
+      choices: [
+        { text: "تابع إلى الدرج", next: 4 }
+      ]
+    },
+    { // 16: Examine the Labyrinth (Extra from Scene 5, bg5)
+      text: "تنظر إلى السلالم المتشابكة وتدرك أن كل درجة تحمل نبضات من تاريخٍ منسي، كأنها مفاتيح لأسرار دفينة.",
+      bg: "bg5.jpg",
+      choices: [
+        { text: "تابع النزول", next: 5 }
+      ]
+    },
+    { // 17: Examine Princess Room (Extra from Scene 6, bg6)
+      text: "تفحص زوايا الغرفة الباهتة وتلمح آثار دموع ونقوش تهمس بذكريات من الفراق، فتشعر بعمق الحزن الذي يسكن المكان.",
+      bg: "bg6.jpg",
+      choices: [
+        { text: "تابع", next: 6 }
+      ]
+    },
+    { // 18: Ask About Her Past (Extra from Scene 7, bg7)
+      text: "تنهمر كلماتها كأنها أنشودة حزينة، تحكي عن حبٍ خاب وآمال انطفأت مع ضوء القمر.",
+      bg: "bg7.jpg",
+      choices: [
+        { text: "تابع الحديث", next: 7 }
+      ]
+    },
+    { // 19: Observe the Cabin (Extra from Scene 2, bg3)
+      text: "من بعيد تراقب الكوخ القديم؛ جدرانه البالية ونوافذه الخافتة تنطق بأسرارٍ لم تُفصح بعد. لديك خياران: الاقتراب أو العودة.",
+      bg: "bg3.jpg",
+      choices: [
+        { text: "اقترب الآن", next: 3 },
+        { text: "عد إلى الغابة", next: 1 }
+      ]
+    }
+  ];
+
+  let currentStep = 0;
+  let audioStarted = false;
+
+  const vnContainer = document.getElementById("vn-container");
+  const vnText = document.getElementById("vn-text");
+  const vnChoices = document.getElementById("vn-choices");
+  const vnAudio = document.getElementById("vn-audio");
+  const vnClose = document.getElementById("vn-close");
+
+  function startAudioIfNeeded() {
+    if (!audioStarted) {
+      vnAudio.play().catch(err => console.log("Audio play prevented:", err));
+      audioStarted = true;
+    }
+  }
+
+  function updateScene() {
+    const scene = visualNovel[currentStep];
+    console.log("Updating scene:", currentStep, scene.text);
+    vnContainer.style.backgroundImage = "url('" + staticBase + scene.bg + "')";
+    vnText.textContent = scene.text;
+    vnChoices.innerHTML = "";
+    scene.choices.forEach(choice => {
+      const button = document.createElement("button");
+      button.textContent = choice.text;
+      // Plain white text with underline on hover.
+      button.className = "text-white hover:underline cursor-pointer";
+      button.addEventListener("click", () => {
+        startAudioIfNeeded();
+        if (choice.setKnife) {
+          hasKnife = true;
+          console.log("Knife acquired.");
+        }
+        // In Scene 6 (Princess Room), the "هاجمها" option outcome depends on knife possession.
+        if (currentStep === 6 && choice.text === "هاجمها") {
+          currentStep = hasKnife ? 8 : 10;
+          updateScene();
+          return;
+        }
+        if (choice.next !== undefined && choice.next !== null) {
+          currentStep = choice.next;
+          updateScene();
+        } else if (choice.action) {
+          choice.action();
+        }
+      });
+      vnChoices.appendChild(button);
+    });
+  }
+
+  function showVisualNovel() {
+    document.getElementById("visual-novel").classList.remove("hidden");
+    updateScene();
+  }
+
+  vnClose.addEventListener("click", () => {
+    document.getElementById("visual-novel").classList.add("hidden");
+    vnAudio.pause();
+    vnAudio.currentTime = 0;
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+      if (Math.random() < 0.2) {
+        showVisualNovel();
+      }
+    }, 1000);
+  });
+</script>
 {% endblock %}

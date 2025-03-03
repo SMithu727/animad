@@ -1,6 +1,8 @@
 # config.py
 import os
+from pathlib import Path
 
+# Base directory
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
@@ -23,7 +25,19 @@ class Config:
     # Cache configuration
     CACHE_TYPE = 'SimpleCache'  # Use simple in-memory caching
     CACHE_DEFAULT_TIMEOUT = 86400  # Cache timeout in seconds (24 hours)
-    
+
+    # MyAnimeList (MAL) API configuration
     MAL_CLIENT_ID = '51e35dd154e9480cbe810f17a43240a8'  # Removed trailing space
     MAL_CLIENT_SECRET = 'f4fc075966ce8510d44824bb60086fa2f2cbda050c8e313ccbade4d1a42b1d91'
     MAL_REDIRECT_URI = 'http://animad.site/mal_callback'
+
+    # File upload configuration
+    UPLOAD_FOLDER = os.path.join(basedir, 'static', 'uploads')  # Path for file uploads
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB upload limit
+
+    # Google Cloud Translation API credentials
+    GOOGLE_TRANSLATE_CREDENTIALS = os.path.join(basedir, 'credentials', 'innate-sunset-451719-c5-08a2d0e73f47.json')
+
+    # Logging configuration
+    LOG_LEVEL = 'DEBUG'  # Set to 'INFO' or 'WARNING' in production
+    LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
